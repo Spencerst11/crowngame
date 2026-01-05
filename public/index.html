@@ -73,11 +73,23 @@
         </div>
       </div>
       <div id="hand" class="hand"></div>
-      <div class="meld-builder">
-        <div class="builder-header">
-          <h3>Lay down books & runs</h3>
-          <button id="confirm-melds" class="primary">Confirm</button>
-        </div>
+     <div class="groups-panel">
+  <div class="groups-header">
+    <h3>Groups</h3>
+    <div class="groups-actions">
+      <button id="start-group">Start group</button>
+      <button id="ungroup-selected" class="ghost">Ungroup selected</button>
+    </div>
+  </div>
+
+  <p class="muted groups-hint">
+    Select cards (from your hand or existing groups), then press <strong>Start group</strong>.
+    Use <strong>Ungroup selected</strong> to put cards back in your hand.
+  </p>
+
+  <div id="groups" class="groups-list"></div>
+  <p id="meld-error" class="error"></p>
+</div>
         <p class="muted">Select cards then choose <strong>Start book</strong> or <strong>Start run</strong>. Confirm to validate against the rules. You must leave exactly one card to discard when going out.</p>
         <div class="builder-controls">
           <button id="start-book">Start book</button>
