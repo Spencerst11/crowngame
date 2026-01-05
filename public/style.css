@@ -310,29 +310,43 @@ button.primary { background: #22c55e; }
   color: var(--muted);
 }
 
-.modal {
+.score-tab {
   position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
+  top: 140px;
+  right: 12px;
+  z-index: 8;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  width: 280px;
+  transform: translateX(0);
+  transition: transform 0.2s ease;
 }
 
-.modal-content {
+.score-tab.collapsed {
+  transform: translateX(calc(100% - 88px));
+}
+
+.score-toggle {
+  width: 88px;
+  border-radius: 12px 12px 0 0;
+  background: linear-gradient(135deg, #0ea5e9, #22c55e);
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  padding: 10px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+.score-panel {
   background: #0f172a;
   border: 1px solid #223457;
-  border-radius: 12px;
-  padding: 16px;
-  width: 320px;
-  color: var(--text);
+  border-radius: 0 0 12px 12px;
+  padding: 14px;
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
 }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.score-panel h3 {
+  margin: 0 0 8px;
 }
 
 .score-row {
