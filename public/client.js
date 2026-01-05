@@ -18,16 +18,14 @@ const scoreTab = document.getElementById('score-tab');
 const scoreToggle = document.getElementById('score-toggle');
 const resetBtn = document.getElementById('reset-btn');
 const handEl = document.getElementById('hand');
-const meldPreview = document.getElementById('meld-preview');
+
 const meldError = document.getElementById('meld-error');
 const drawBtn = document.getElementById('draw-card');
 const discardBtn = document.getElementById('pickup-discard');
 const discardSelectedBtn = document.getElementById('discard-selected');
 const goOutBtn = document.getElementById('go-out');
-const confirmBtn = document.getElementById('confirm-melds');
-const startBookBtn = document.getElementById('start-book');
-const startRunBtn = document.getElementById('start-run');
-const clearBuilderBtn = document.getElementById('clear-builder');
+
+
 const drawPile = document.getElementById('draw-pile');
 const discardPile = document.getElementById('discard-pile');
 const discardCard = document.getElementById('discard-card');
@@ -39,14 +37,16 @@ const drawCount = document.getElementById('draw-count');
 const scoreBody = document.getElementById('score-body');
 const playersEl = document.getElementById('players');
 const entryError = document.getElementById('entry-error');
-
+const startGroupBtn = document.getElementById('start-group');
+const ungroupSelectedBtn = document.getElementById('ungroup-selected');
+const groupsEl = document.getElementById('groups');
 const state = {
   roomCode: null,
   you: null,
   hand: [],
-  confirmedMelds: [],
+  
   selected: new Set(),
-  melds: [],
+ 
   wildRank: null,
   players: [],
   discardTop: null,
@@ -133,21 +133,9 @@ handEl.addEventListener('click', (e) => {
   toggleSelect(cardEl.dataset.id);
 });
 
-startBookBtn.addEventListener('click', () => startGroup('book'));
-startRunBtn.addEventListener('click', () => startGroup('run'));
-clearBuilderBtn.addEventListener('click', () => {
-  state.melds = [];
-  meldError.textContent = '';
-  state.selected.clear();
-  renderHand();
-  renderMelds();
-});
 
-confirmBtn.addEventListener('click', () => {
-  meldError.textContent = '';
-  if (!state.roomCode) return;
-  socket.emit('submit-melds', { roomCode: state.roomCode, melds: state.melds, markGoOut: false });
-});
+
+
 
 goOutBtn.addEventListener('click', () => {
   meldError.textContent = '';
@@ -161,24 +149,6 @@ scoreToggle.addEventListener('click', toggleScoreboard);
 function toggleSelect(id) {
   if (state.selected.has(id)) state.selected.delete(id); else state.selected.add(id);
   renderHand();
-}
-
-function startGroup(type) {
-  const ids = Array.from(state.selected);
-  if (ids.length < 3) {
-    meldError.textContent = 'Pick at least three cards for a book or run.';
-    return;
-  }
-  const alreadyUsed = new Set([...state.melds.flat(), ...state.confirmedMelds]);
-  const conflict = ids.some((id) => alreadyUsed.has(id));
-  if (conflict) {
-    meldError.textContent = 'Cards already used in another meld.';
-    return;
-  }
-  state.melds.push(ids);
-  state.selected.clear();
-  renderHand();
-  renderMelds(type);
 }
 
 socket.on('join-error', (msg) => {
@@ -236,7 +206,6 @@ function renderGame() {
   renderHand();
   renderDiscard();
   renderPlayers();
-  renderMelds();
 }
 
 function renderDiscard() {
@@ -339,36 +308,15 @@ function buildStatus() {
 }
 function renderHand() {
   handEl.innerHTML = '';
-  const used = new Set([...state.melds.flat(), ...state.confirmedMelds]);
   state.hand.forEach((card) => {
     const cardEl = createCard(card);
     if (state.selected.has(card.id)) cardEl.classList.add('selected');
-    if (used.has(card.id)) cardEl.style.opacity = '0.6';
     cardEl.dataset.id = card.id;
     handEl.appendChild(cardEl);
   });
 }
 
-function renderMelds(newType) {
-  meldPreview.innerHTML = '';
-  state.melds.forEach((group, idx) => {
-    const groupEl = document.createElement('div');
-    groupEl.className = 'meld-group';
-    const title = document.createElement('h4');
-    title.textContent = `Group ${idx + 1}`;
-    groupEl.appendChild(title);
-    const row = document.createElement('div');
-    row.style.display = 'flex';
-    row.style.gap = '6px';
-    group.forEach((id) => {
-      const card = state.hand.find((c) => c.id === id);
-      if (card) row.appendChild(createCard(card));
-    });
-    groupEl.appendChild(row);
-    meldPreview.appendChild(groupEl);
-  });
-  if (newType) meldError.textContent = '';
-}
+
 
 function renderCard(target, card) {
   target.className = 'card';
@@ -457,4 +405,3 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-statusText.textContent = 'Enter the password to sit at the table.';
