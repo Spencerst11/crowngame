@@ -384,3 +384,22 @@ button.primary { background: #22c55e; }
   .table-circle { inset: 16px; }
   .seat { width: 120px; }
 }
+.game-banner {
+  margin: 14px auto;
+  padding: 14px 24px;
+  max-width: 640px;
+  text-align: center;
+
+  background: hotpink;
+  color: white;
+
+  font-size: 22px;
+  font-weight: 900;
+
+  border: 3px solid black;
+  border-radius: 999px;
+}
+
+.game-banner.hidden {
+  display: none;
+}
