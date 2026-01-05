@@ -31,7 +31,7 @@ const clearBuilderBtn = document.getElementById('clear-builder');
 const drawPile = document.getElementById('draw-pile');
 const discardPile = document.getElementById('discard-pile');
 const discardCard = document.getElementById('discard-card');
-const statusText = document.getElementById('status-text');
+
 const roundLabel = document.getElementById('round-label');
 const wildLabel = document.getElementById('wild-label');
 const roomLabel = document.getElementById('room-label');
