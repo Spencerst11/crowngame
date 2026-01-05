@@ -2,6 +2,7 @@ const socket = io();
 
 const entryScreen = document.getElementById('entry-screen');
 const gameScreen = document.getElementById('game');
+const createBtn = document.getElementById('create-btn');
 const joinBtn = document.getElementById('join-btn');
 const readyBtn = document.getElementById('ready-btn');
 const scoreBtn = document.getElementById('score-btn');
@@ -56,14 +57,22 @@ function getInputs() {
   };
 }
 
-joinBtn.addEventListener('click', () => {
+createBtn.addEventListener('click', () => handleEntry('create'));
+joinBtn.addEventListener('click', () => handleEntry('join'));
+
+function handleEntry(mode) {
   const { room, name, password } = getInputs();
   if (!room || !name || !password) {
     entryError.textContent = 'Enter the password, room code, and your name.';
     return;
   }
-  socket.emit('join', { roomCode: room, name, password });
-});
+  entryError.textContent = '';
+  if (mode === 'create') {
+    socket.emit('create-room', { roomCode: room, name, password });
+  } else {
+    socket.emit('join', { roomCode: room, name, password });
+  }
+}
 
 readyBtn.addEventListener('click', () => {
   if (!state.roomCode) return;
@@ -128,8 +137,7 @@ scoreBtn.addEventListener('click', toggleScoreboard);
 scoreToggle.addEventListener('click', toggleScoreboard);
 
 function toggleSelect(id) {
-  if (state.selected.has(id)) state.selected.delete(id);
-  else state.selected.add(id);
+  if (state.selected.has(id)) state.selected.delete(id); else state.selected.add(id);
   renderHand();
 }
 
@@ -152,6 +160,16 @@ function startGroup(type) {
 }
 
 socket.on('join-error', (msg) => {
+  entryError.textContent = msg;
+});
+
+socket.on('join-success', ({ roomCode }) => {
+  state.roomCode = roomCode;
+  entryError.textContent = '';
+  socket.emit('request-state', { roomCode });
+});
+
+socket.on('create-error', (msg) => {
   entryError.textContent = msg;
 });
 
@@ -237,6 +255,7 @@ function renderPlayers() {
     badge.appendChild(ready);
     badge.appendChild(name);
     badge.appendChild(countSpan);
+
     seat.appendChild(badge);
 
     if (state.currentTurn === p.id) {
@@ -389,7 +408,7 @@ discardPile.addEventListener('dblclick', () => {
 });
 
 // Draw pile click draws
-drawPile.addEventListener('click', () => {
+ drawPile.addEventListener('click', () => {
   if (!state.roomCode) return;
   socket.emit('draw-card', { roomCode: state.roomCode, source: 'draw' });
 });
