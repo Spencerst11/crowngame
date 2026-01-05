@@ -290,6 +290,7 @@ io.on('connection', (socket) => {
     room.players.push(player);
     rooms.set(roomCode, room);
     socket.join(roomCode);
+    socket.emit('join-success', { roomCode });
     broadcastRoom(room);
   });
 
@@ -325,6 +326,7 @@ io.on('connection', (socket) => {
     };
     room.players.push(player);
     socket.join(roomCode);
+    socket.emit('join-success', { roomCode });
     broadcastRoom(room);
   });
 
