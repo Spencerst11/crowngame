@@ -322,10 +322,22 @@ button.primary { background: #22c55e; }
   flex-wrap: nowrap;
   overflow-x: auto;
 
-  margin-top: 6px;
+  margin: 6px 0;
   padding-bottom: 4px;
-}
 
+  justify-content: center;
+}
+.hand-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+
+  margin-top: 6px;
+  padding: 6px;
+
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
+}
 .hand .card {
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -338,13 +350,14 @@ button.primary { background: #22c55e; }
 }
 
 .meld-builder {
-  margin-top: 16px;
-  padding: 14px;
-  border: 1px solid #233657;
-  border-radius: 12px;
-  background: rgba(34, 52, 87, 0.4);
-}
+  margin-top: 8px;
+  padding: 8px;
 
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+
+  max-width: 100%;
+}
 .builder-controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 
 .meld-preview { margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap; }
