@@ -1,0 +1,365 @@
++:root {
++  --bg: #0f172a;
++  --surface: #182544;
++  --accent: #ffd166;
++  --text: #e2e8f0;
++  --muted: #94a3b8;
++  --table: #0b3b1e;
++  --table-edge: #062811;
++  --danger: #ef4444;
++  --success: #22c55e;
++}
++
++* { box-sizing: border-box; }
++body {
++  margin: 0;
++  font-family: "Inter", system-ui, -apple-system, sans-serif;
++  background: radial-gradient(circle at 30% 20%, rgba(255, 209, 102, 0.07), transparent 30%),
++    radial-gradient(circle at 80% 0%, rgba(96, 165, 250, 0.09), transparent 25%),
++    #0b1224;
++  color: var(--text);
++  min-height: 100vh;
++}
++
++.panel {
++  max-width: 520px;
++  margin: 48px auto;
++  background: var(--surface);
++  border: 1px solid #1f2a52;
++  border-radius: 16px;
++  padding: 28px;
++  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
++}
++
++h1, h2, h3 { margin: 0 0 8px; }
++
++.muted { color: var(--muted); }
++
++.form-row {
++  display: flex;
++  flex-direction: column;
++  margin-bottom: 12px;
++}
++
++.form-row input {
++  padding: 12px;
++  border-radius: 10px;
++  border: 1px solid #23325b;
++  background: #0f172a;
++  color: var(--text);
++}
++
++button {
++  background: linear-gradient(135deg, #f8b864, #ff8c42);
++  border: none;
++  color: #0b1224;
++  padding: 10px 16px;
++  border-radius: 10px;
++  font-weight: 700;
++  cursor: pointer;
++  transition: transform 0.1s ease, box-shadow 0.2s ease;
++  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
++}
++
++button:hover { transform: translateY(-1px); }
++
++button:disabled {
++  opacity: 0.45;
++  cursor: not-allowed;
++  box-shadow: none;
++}
++
++button.ghost {
++  background: #111827;
++  color: var(--text);
++  border: 1px solid #22345f;
++  box-shadow: none;
++}
++
++button.primary { background: #22c55e; }
++
++#error, .error { color: var(--danger); min-height: 20px; }
++
++.note {
++  margin-top: 12px;
++  padding: 10px;
++  border: 1px dashed #475569;
++  border-radius: 10px;
++  background: rgba(71, 85, 105, 0.1);
++}
++
++.hidden { display: none; }
++
++.top-bar {
++  display: flex;
++  justify-content: space-between;
++  align-items: center;
++  padding: 16px 20px;
++  background: rgba(15, 23, 42, 0.8);
++  border-bottom: 1px solid #1e293b;
++}
++
++.tag {
++  display: inline-block;
++  margin-right: 8px;
++  padding: 8px 12px;
++  background: rgba(255, 255, 255, 0.06);
++  border-radius: 999px;
++  border: 1px solid #273554;
++}
++
++.table-zone {
++  position: relative;
++  height: 480px;
++  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.08), transparent 55%);
++  overflow: hidden;
++}
++
++.table-circle {
++  position: absolute;
++  inset: 32px;
++  background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0) 45%),
++    radial-gradient(circle at 50% 70%, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 50%),
++    linear-gradient(145deg, #0b3b1e, #072b15);
++  border-radius: 50%;
++  border: 12px solid var(--table-edge);
++  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.4);
++  display: grid;
++  place-items: center;
++}
++
++.light-overlay {
++  position: absolute;
++  inset: 0;
++  pointer-events: none;
++  background: radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.15), transparent 45%);
++  mix-blend-mode: screen;
++  z-index: 1;
++}
++
++.players {
++  position: absolute;
++  inset: 0;
++  list-style: none;
++  margin: 0;
++  padding: 0;
++  z-index: 2;
++}
++
++.seat {
++  position: absolute;
++  width: 160px;
++  text-align: center;
++  transform-origin: center;
++}
++
++.seat .badge {
++  display: inline-flex;
++  align-items: center;
++  justify-content: center;
++  padding: 6px 10px;
++  background: rgba(15, 23, 42, 0.8);
++  border: 1px solid #263657;
++  border-radius: 12px;
++  gap: 6px;
++}
++
++.seat .name { font-weight: 700; }
++.seat .count { color: var(--muted); font-size: 12px; }
++
++.ready-dot {
++  width: 10px;
++  height: 10px;
++  border-radius: 50%;
++  background: var(--danger);
++  box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
++}
++
++.ready-dot.active { background: var(--success); }
++
++.gone-out {
++  margin-top: 6px;
++  display: inline-flex;
++  align-items: center;
++  gap: 6px;
++}
++
++.bubble {
++  position: relative;
++  display: inline-block;
++  padding: 8px 10px;
++  background: #f97316;
++  border-radius: 14px;
++  color: #0b1224;
++  font-weight: 800;
++}
++
++.bubble::after {
++  content: '';
++  position: absolute;
++  bottom: -6px;
++  left: 50%;
++  width: 10px;
++  height: 10px;
++  background: #f97316;
++  transform: translateX(-50%) rotate(45deg);
++}
++
++.table-circle .pile {
++  text-align: center;
++  margin: 0 12px;
++  z-index: 3;
++}
++
++.card {
++  width: 72px;
++  height: 104px;
++  border-radius: 10px;
++  background: #fff;
++  color: #0f172a;
++  border: 2px solid #0f172a;
++  display: grid;
++  grid-template-columns: repeat(2, 1fr);
++  grid-template-rows: repeat(4, 1fr);
++  padding: 8px;
++  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
++  position: relative;
++}
++
++.card .rank { font-weight: 800; }
++.card .suit { font-size: 18px; }
++
++.card.back {
++  background: repeating-linear-gradient(45deg, #ff4d4f 0 8px, #fff 8px 16px);
++  border: 3px solid #000;
++  grid-template-columns: 1fr;
++  grid-template-rows: 1fr;
++}
++
++.pile-label { margin-top: 8px; color: var(--muted); }
++
++.count {
++  margin-top: 4px;
++  font-weight: 700;
++}
++
++.status {
++  position: absolute;
++  bottom: 18px;
++  left: 50%;
++  transform: translateX(-50%);
++  padding: 8px 14px;
++  background: rgba(15, 23, 42, 0.85);
++  border: 1px solid #223455;
++  border-radius: 10px;
++  color: var(--text);
++}
++
++.hand-panel {
++  background: rgba(15, 23, 42, 0.85);
++  padding: 16px 20px 24px;
++  border-top: 1px solid #1e293b;
++  backdrop-filter: blur(10px);
++}
++
++.hand-header {
++  display: flex;
++  align-items: center;
++  justify-content: space-between;
++}
++
++.hand {
++  display: flex;
++  gap: 10px;
++  flex-wrap: wrap;
++  margin-top: 12px;
++}
++
++.hand .card {
++  cursor: pointer;
++  transition: transform 0.15s ease, box-shadow 0.15s ease;
++}
++
++.hand .card.selected {
++  transform: translateY(-6px) scale(1.02);
++  box-shadow: 0 16px 32px rgba(255, 209, 102, 0.35);
++  border-color: #f59e0b;
++}
++
++.meld-builder {
++  margin-top: 16px;
++  padding: 14px;
++  border: 1px solid #233657;
++  border-radius: 12px;
++  background: rgba(34, 52, 87, 0.4);
++}
++
++.builder-controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
++
++.meld-preview { margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap; }
++
++.meld-group {
++  border: 1px dashed #475569;
++  padding: 8px;
++  border-radius: 10px;
++  background: rgba(15, 23, 42, 0.55);
++}
++
++.meld-group h4 {
++  margin: 0 0 6px;
++  color: var(--muted);
++}
++
++.modal {
++  position: fixed;
++  inset: 0;
++  background: rgba(0, 0, 0, 0.5);
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  z-index: 10;
++}
++
++.modal-content {
++  background: #0f172a;
++  border: 1px solid #223457;
++  border-radius: 12px;
++  padding: 16px;
++  width: 320px;
++  color: var(--text);
++}
++
++.modal-header {
++  display: flex;
++  justify-content: space-between;
++  align-items: center;
++}
++
++.score-row {
++  display: flex;
++  justify-content: space-between;
++  padding: 8px 0;
++  border-bottom: 1px solid #1e293b;
++}
++
++.top-actions { display: flex; gap: 8px; }
++
++.card .top-left { grid-area: 1 / 1 / 3 / 2; text-align: left; }
++.card .bottom-right { grid-area: 3 / 2 / 5 / 3; text-align: right; transform: rotate(180deg); }
++.card .center-suit { grid-area: 2 / 1 / 4 / 3; display: flex; align-items: center; justify-content: center; font-size: 26px; }
++
++.card[data-suit="stars"] { color: #fcd34d; }
++.card[data-suit="diamonds"] { color: #60a5fa; }
++.card[data-suit="hearts"] { color: #ef4444; }
++.card[data-suit="spades"] { color: #111; }
++.card[data-suit="clubs"] { color: #22c55e; }
++.card[data-suit="joker"] {
++  background: linear-gradient(135deg, #f97316, #f43f5e);
++  color: #fff;
++}
++
++@media (max-width: 960px) {
++  .table-zone { height: 400px; }
++  .table-circle { inset: 16px; }
++  .seat { width: 120px; }
++}
