@@ -313,8 +313,8 @@ function renderPlayers() {
     }
 
     playersEl.appendChild(seat);
-  });
-  statusText.textContent = buildStatus();
+  });const msg = buildStatus();
+if (msg) showBanner(msg);
   renderScores();
 }
 
