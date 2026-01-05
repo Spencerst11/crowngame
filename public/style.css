@@ -88,6 +88,13 @@ button.primary { background: #22c55e; }
   background: rgba(71, 85, 105, 0.1);
 }
 
+.entry-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
 .hidden { display: none; }
 
 .top-bar {
@@ -376,4 +383,5 @@ button.primary { background: #22c55e; }
   .table-zone { height: 400px; }
   .table-circle { inset: 16px; }
   .seat { width: 120px; }
+}
 }
