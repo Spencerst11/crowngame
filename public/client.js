@@ -319,6 +319,11 @@ function renderPlayers() {
 }
 
 function buildStatus() {
+  if (state.status === 'finished') return 'Game finished!';
+  if (state.goOutPlayerId) return 'Someone has gone out! One last turn!';
+  if (state.currentTurn === state.you) return 'Your turn!';
+  return null;
+}
   if (state.status === 'lobby') return 'Waiting for everyone to ready (2-7 players).';
   if (state.status === 'finished') return 'Game finished. Reset to play again.';
   const youTurn = state.currentTurn === state.you ? 'Your turn.' : '';
