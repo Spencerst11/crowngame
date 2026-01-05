@@ -249,6 +249,50 @@ function isValidRun(cards, wildRank) {
 }
 
 io.on('connection', (socket) => {
+  socket.on('create-room', ({ roomCode, name, password }) => {
+    if (password !== PASSWORD) {
+      socket.emit('create-error', 'Incorrect password.');
+      return;
+    }
+    if (!roomCode || !name) {
+      socket.emit('create-error', 'Room code and name are required.');
+      return;
+    }
+    if (rooms.has(roomCode)) {
+      socket.emit('create-error', 'That room code is already in use. Try another.');
+      return;
+    }
+    const room = {
+      code: roomCode,
+      players: [],
+      deck: [],
+      drawPile: [],
+      discardPile: [],
+      status: 'lobby',
+      round: 1,
+      dealerIndex: 0,
+      currentTurnPlayerId: null,
+      goOutPlayerId: null,
+      turnOrder: []
+    };
+    const player = {
+      id: socket.id,
+      name,
+      ready: false,
+      score: 0,
+      hand: [],
+      hasDrawn: false,
+      goneOut: false,
+      laidMelds: [],
+      laidMeldIds: [],
+      lastTurnComplete: false
+    };
+    room.players.push(player);
+    rooms.set(roomCode, room);
+    socket.join(roomCode);
+    broadcastRoom(room);
+  });
+
   socket.on('join', ({ roomCode, name, password }) => {
     if (password !== PASSWORD) {
       socket.emit('join-error', 'Incorrect password.');
@@ -258,22 +302,11 @@ io.on('connection', (socket) => {
       socket.emit('join-error', 'Room code and name are required.');
       return;
     }
-    if (!rooms.has(roomCode)) {
-      rooms.set(roomCode, {
-        code: roomCode,
-        players: [],
-        deck: [],
-        drawPile: [],
-        discardPile: [],
-        status: 'lobby',
-        round: 1,
-        dealerIndex: 0,
-        currentTurnPlayerId: null,
-        goOutPlayerId: null,
-        turnOrder: []
-      });
-    }
     const room = rooms.get(roomCode);
+    if (!room) {
+      socket.emit('join-error', 'Room not found. Ask the host to create it first.');
+      return;
+    }
     if (room.players.length >= MAX_PLAYERS) {
       socket.emit('join-error', 'Room is full (7 players max).');
       return;
