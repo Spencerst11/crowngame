@@ -56,7 +56,21 @@ const state = {
   goOutPlayerId: null,
   status: 'lobby'
 };
+let bannerTimeout = null;
 
+function showBanner(message) {
+  const banner = document.getElementById("game-banner");
+  if (!banner) return;
+
+  banner.textContent = message;
+  banner.classList.remove("hidden");
+
+  if (bannerTimeout) clearTimeout(bannerTimeout);
+
+  bannerTimeout = setTimeout(() => {
+    banner.classList.add("hidden");
+  }, 6000);
+}
 function getInputs() {
   return {
     room: document.getElementById('room').value.trim(),
