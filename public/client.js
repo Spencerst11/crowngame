@@ -5,6 +5,8 @@ const gameScreen = document.getElementById('game');
 const joinBtn = document.getElementById('join-btn');
 const readyBtn = document.getElementById('ready-btn');
 const scoreBtn = document.getElementById('score-btn');
+const scoreTab = document.getElementById('score-tab');
+const scoreToggle = document.getElementById('score-toggle');
 const resetBtn = document.getElementById('reset-btn');
 const handEl = document.getElementById('hand');
 const meldPreview = document.getElementById('meld-preview');
@@ -25,8 +27,6 @@ const roundLabel = document.getElementById('round-label');
 const wildLabel = document.getElementById('wild-label');
 const roomLabel = document.getElementById('room-label');
 const drawCount = document.getElementById('draw-count');
-const scoreModal = document.getElementById('scoreboard');
-const closeScoreBtn = document.getElementById('close-score');
 const scoreBody = document.getElementById('score-body');
 const playersEl = document.getElementById('players');
 const entryError = document.getElementById('entry-error');
@@ -124,16 +124,12 @@ goOutBtn.addEventListener('click', () => {
   socket.emit('submit-melds', { roomCode: state.roomCode, melds: state.melds, markGoOut: true });
 });
 
-scoreBtn.addEventListener('click', () => {
-  scoreModal.classList.remove('hidden');
-});
-
-closeScoreBtn.addEventListener('click', () => {
-  scoreModal.classList.add('hidden');
-});
+scoreBtn.addEventListener('click', toggleScoreboard);
+scoreToggle.addEventListener('click', toggleScoreboard);
 
 function toggleSelect(id) {
-  if (state.selected.has(id)) state.selected.delete(id); else state.selected.add(id);
+  if (state.selected.has(id)) state.selected.delete(id);
+  else state.selected.add(id);
   renderHand();
 }
 
@@ -241,7 +237,6 @@ function renderPlayers() {
     badge.appendChild(ready);
     badge.appendChild(name);
     badge.appendChild(countSpan);
-
     seat.appendChild(badge);
 
     if (state.currentTurn === p.id) {
@@ -372,6 +367,13 @@ function renderScores() {
       row.appendChild(score);
       scoreBody.appendChild(row);
     });
+}
+
+function toggleScoreboard() {
+  if (!scoreTab) return;
+  scoreTab.classList.toggle('collapsed');
+  const open = !scoreTab.classList.contains('collapsed');
+  scoreToggle.textContent = open ? 'Scores ▾' : 'Scores ▸';
 }
 
 socket.on('connect', () => {
