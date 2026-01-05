@@ -1,102 +1,102 @@
-+<!DOCTYPE html>
-+<html lang="en">
-+<head>
-+  <meta charset="UTF-8" />
-+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-+  <title>Crown Game Family Table</title>
-+  <link rel="stylesheet" href="style.css" />
-+</head>
-+<body>
-+  <div id="entry-screen" class="panel">
-+    <h1>Family Five Crowns Table</h1>
-+    <p class="muted">Private table secured for invited players only.</p>
-+    <div class="form-row">
-+      <label>Password</label>
-+      <input id="password" type="password" placeholder="Enter the shared password" />
-+    </div>
-+    <div class="form-row">
-+      <label>Room code</label>
-+      <input id="room" type="text" placeholder="ex: family-room" />
-+    </div>
-+    <div class="form-row">
-+      <label>Your name</label>
-+      <input id="name" type="text" placeholder="ex: Taylor" />
-+    </div>
-+    <button id="join-btn">Join table</button>
-+    <p id="entry-error" class="error"></p>
-+    <div class="note">Password for entry: <strong>5Crown</strong>. Please share only with the family.</div>
-+  </div>
-+
-+  <div id="game" class="hidden">
-+    <header class="top-bar">
-+      <div>
-+        <div class="tag">Room: <span id="room-label"></span></div>
-+        <div class="tag">Round: <span id="round-label">1</span></div>
-+        <div class="tag">Wild: <span id="wild-label"></span></div>
-+      </div>
-+      <div class="top-actions">
-+        <button id="ready-btn">Ready up</button>
-+        <button id="score-btn">Scores</button>
-+        <button id="reset-btn" class="ghost">Reset to lobby</button>
-+      </div>
-+    </header>
-+
-+    <main class="table-zone">
-+      <div class="light-overlay"></div>
-+      <div id="players" class="players"></div>
-+      <div class="table-circle">
-+        <div class="pile" id="draw-pile">
-+          <div class="card back"></div>
-+          <div class="pile-label">Draw pile</div>
-+          <div class="count" id="draw-count">0</div>
-+        </div>
-+        <div class="pile" id="discard-pile">
-+          <div class="card" id="discard-card">--</div>
-+          <div class="pile-label">Discard</div>
-+        </div>
-+        <div class="status" id="status-text"></div>
-+      </div>
-+    </main>
-+
-+    <section class="hand-panel">
-+      <div class="hand-header">
-+        <h2>Your hand</h2>
-+        <div class="hand-actions">
-+          <button id="draw-card">Draw</button>
-+          <button id="pickup-discard">Take discard</button>
-+          <button id="discard-selected" class="ghost">Discard selected</button>
-+          <button id="go-out">Go out</button>
-+        </div>
-+      </div>
-+      <div id="hand" class="hand"></div>
-+      <div class="meld-builder">
-+        <div class="builder-header">
-+          <h3>Lay down books & runs</h3>
-+          <button id="confirm-melds" class="primary">Confirm</button>
-+        </div>
-+        <p class="muted">Select cards then choose <strong>Start book</strong> or <strong>Start run</strong>. Confirm to validate against the rules. You must leave exactly one card to discard when going out.</p>
-+        <div class="builder-controls">
-+          <button id="start-book">Start book</button>
-+          <button id="start-run">Start run</button>
-+          <button id="clear-builder" class="ghost">Clear</button>
-+        </div>
-+        <div id="meld-preview" class="meld-preview"></div>
-+        <p id="meld-error" class="error"></p>
-+      </div>
-+    </section>
-+  </div>
-+
-+  <div id="scoreboard" class="modal hidden">
-+    <div class="modal-content">
-+      <div class="modal-header">
-+        <h3>Scores</h3>
-+        <button id="close-score">×</button>
-+      </div>
-+      <div id="score-body"></div>
-+    </div>
-+  </div>
-+
-+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" integrity="sha384-Y0J6l9cJIlGTpZC5+y7WLTn7DkA3WhMHBMWk9YW7SWGf6KIMx/6oYvjWET6z5Ner" crossorigin="anonymous"></script>
-+  <script src="client.js"></script>
-+</body>
-+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crown Game Family Table</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="entry-screen" class="panel">
+    <h1>Family Five Crowns Table</h1>
+    <p class="muted">Private table secured for invited players only.</p>
+    <div class="form-row">
+      <label>Password</label>
+      <input id="password" type="password" placeholder="Enter the shared password" />
+    </div>
+    <div class="form-row">
+      <label>Room code</label>
+      <input id="room" type="text" placeholder="ex: family-room" />
+    </div>
+    <div class="form-row">
+      <label>Your name</label>
+      <input id="name" type="text" placeholder="ex: Taylor" />
+    </div>
+    <button id="join-btn">Join table</button>
+    <p id="entry-error" class="error"></p>
+    <div class="note">Password for entry: <strong>5Crown</strong>. Please share only with the family.</div>
+  </div>
+
+  <div id="game" class="hidden">
+    <header class="top-bar">
+      <div>
+        <div class="tag">Room: <span id="room-label"></span></div>
+        <div class="tag">Round: <span id="round-label">1</span></div>
+        <div class="tag">Wild: <span id="wild-label"></span></div>
+      </div>
+      <div class="top-actions">
+        <button id="ready-btn">Ready up</button>
+        <button id="score-btn">Scores</button>
+        <button id="reset-btn" class="ghost">Reset to lobby</button>
+      </div>
+    </header>
+
+    <main class="table-zone">
+      <div class="light-overlay"></div>
+      <div id="players" class="players"></div>
+      <div class="table-circle">
+        <div class="pile" id="draw-pile">
+          <div class="card back"></div>
+          <div class="pile-label">Draw pile</div>
+          <div class="count" id="draw-count">0</div>
+        </div>
+        <div class="pile" id="discard-pile">
+          <div class="card" id="discard-card">--</div>
+          <div class="pile-label">Discard</div>
+        </div>
+        <div class="status" id="status-text"></div>
+      </div>
+    </main>
+
+    <section class="hand-panel">
+      <div class="hand-header">
+        <h2>Your hand</h2>
+        <div class="hand-actions">
+          <button id="draw-card">Draw</button>
+          <button id="pickup-discard">Take discard</button>
+          <button id="discard-selected" class="ghost">Discard selected</button>
+          <button id="go-out">Go out</button>
+        </div>
+      </div>
+      <div id="hand" class="hand"></div>
+      <div class="meld-builder">
+        <div class="builder-header">
+          <h3>Lay down books & runs</h3>
+          <button id="confirm-melds" class="primary">Confirm</button>
+        </div>
+        <p class="muted">Select cards then choose <strong>Start book</strong> or <strong>Start run</strong>. Confirm to validate against the rules. You must leave exactly one card to discard when going out.</p>
+        <div class="builder-controls">
+          <button id="start-book">Start book</button>
+          <button id="start-run">Start run</button>
+          <button id="clear-builder" class="ghost">Clear</button>
+        </div>
+        <div id="meld-preview" class="meld-preview"></div>
+        <p id="meld-error" class="error"></p>
+      </div>
+    </section>
+  </div>
+
+  <div id="scoreboard" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Scores</h3>
+        <button id="close-score">×</button>
+      </div>
+      <div id="score-body"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js" integrity="sha384-Y0J6l9cJIlGTpZC5+y7WLTn7DkA3WhMHBMWk9YW7SWGf6KIMx/6oYvjWET6z5Ner" crossorigin="anonymous"></script>
+  <script src="client.js"></script>
+</body>
+</html>
