@@ -136,7 +136,11 @@ startGroupBtn.addEventListener('click', () => {
   if (!state.roomCode) return;
   startGroupFromSelected();
 });
-
+groupsEl.addEventListener('click', (e) => {
+  const cardEl = e.target.closest('.card');
+  if (!cardEl || !cardEl.dataset.id) return;
+  toggleSelect(cardEl.dataset.id);
+});
 
 
 
