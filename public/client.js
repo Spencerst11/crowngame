@@ -44,7 +44,7 @@ const state = {
   roomCode: null,
   you: null,
   hand: [],
-  
+  groups: [],
   selected: new Set(),
  
   wildRank: null,
@@ -132,7 +132,10 @@ handEl.addEventListener('click', (e) => {
   if (!cardEl || !cardEl.dataset.id) return;
   toggleSelect(cardEl.dataset.id);
 });
-
+startGroupBtn.addEventListener('click', () => {
+  if (!state.roomCode) return;
+  startGroupFromSelected();
+});
 
 
 
@@ -140,7 +143,14 @@ handEl.addEventListener('click', (e) => {
 goOutBtn.addEventListener('click', () => {
   meldError.textContent = '';
   if (!state.roomCode) return;
-  socket.emit('submit-melds', { roomCode: state.roomCode, melds: state.melds, markGoOut: true });
+
+  const melds = state.groups.map(g => g.cardIds);
+
+  socket.emit('submit-melds', {
+    roomCode: state.roomCode,
+    melds,
+    markGoOut: true
+  });
 });
 
 scoreBtn.addEventListener('click', toggleScoreboard);
@@ -150,7 +160,31 @@ function toggleSelect(id) {
   if (state.selected.has(id)) state.selected.delete(id); else state.selected.add(id);
   renderHand();
 }
+function startGroupFromSelected() {
+  meldError.textContent = '';
+  const ids = Array.from(state.selected);
 
+  if (ids.length < 3) {
+    meldError.textContent = 'Select at least 3 cards to form a group.';
+    return;
+  }
+
+  // Remove selected cards from any existing groups (rearranging allowed)
+  state.groups.forEach(group => {
+    group.cardIds = group.cardIds.filter(id => !state.selected.has(id));
+  });
+  state.groups = state.groups.filter(g => g.cardIds.length > 0);
+
+  // Create new group
+  state.groups.push({
+    id: crypto.randomUUID(),
+    cardIds: ids
+  });
+
+  state.selected.clear();
+  renderHand();
+  renderGroups();
+}
 socket.on('join-error', (msg) => {
   entryError.textContent = msg;
 });
@@ -308,14 +342,50 @@ function buildStatus() {
 }
 function renderHand() {
   handEl.innerHTML = '';
-  state.hand.forEach((card) => {
-    const cardEl = createCard(card);
-    if (state.selected.has(card.id)) cardEl.classList.add('selected');
-    cardEl.dataset.id = card.id;
-    handEl.appendChild(cardEl);
+  const groupedIds = new Set(state.groups.flatMap(g => g.cardIds));
+
+  state.hand
+    .filter(card => !groupedIds.has(card.id))
+    .forEach(card => {
+      const cardEl = createCard(card);
+      cardEl.dataset.id = card.id;
+      if (state.selected.has(card.id)) cardEl.classList.add('selected');
+      handEl.appendChild(cardEl);
+    });
+}
+function renderGroups() {
+  groupsEl.innerHTML = '';
+
+  if (!state.groups.length) {
+    groupsEl.textContent = 'No groups yet.';
+    return;
+  }
+
+  state.groups.forEach((group, idx) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'group';
+
+    const title = document.createElement('div');
+    title.textContent = `Group ${idx + 1}`;
+    title.className = 'group-title';
+
+    const row = document.createElement('div');
+    row.className = 'group-cards';
+
+    group.cardIds.forEach(id => {
+      const card = state.hand.find(c => c.id === id);
+      if (!card) return;
+      const el = createCard(card);
+      el.dataset.id = id;
+      if (state.selected.has(id)) el.classList.add('selected');
+      row.appendChild(el);
+    });
+
+    wrap.appendChild(title);
+    wrap.appendChild(row);
+    groupsEl.appendChild(wrap);
   });
 }
-
 
 
 function renderCard(target, card) {
