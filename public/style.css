@@ -236,6 +236,9 @@ button.primary { background: #22c55e; }
   padding: 8px;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
   position: relative;
+  
+  z-index: 3;
+  pointer-events: auto;
 }
 
 .card .rank { font-weight: 800; }
@@ -330,6 +333,9 @@ button.primary { background: #22c55e; }
   padding: 4px 2px;
 
   justify-content: center;
+
+    position: relative;
+  z-index: 2;
 }
 .hand-actions {
   display: flex;
@@ -356,6 +362,9 @@ button.primary { background: #22c55e; }
 
   max-height: 120px;
   overflow-y: auto;
+
+   position: relative;
+  z-index: 1;
 }
 
 .groups-list {
