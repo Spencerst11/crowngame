@@ -239,6 +239,7 @@ button.primary { background: #22c55e; }
   
   z-index: 3;
   pointer-events: auto;
+  cursor: pointer;
 }
 
 .card .rank { font-weight: 800; }
@@ -348,7 +349,15 @@ button.primary { background: #22c55e; }
   background: rgba(0, 0, 0, 0.25);
   border-radius: 12px;
 }
+/* ================================
+   Selected card feedback (GLOBAL)
+   ================================ */
 
+.card.selected {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 16px 32px rgba(255, 209, 102, 0.45);
+  border-color: #f59e0b;
+}
 /* ================================
    Groups (new grouping system)
    ================================ */
