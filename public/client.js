@@ -42,6 +42,21 @@ const ungroupSelectedBtn = document.getElementById('ungroup-selected');
 ungroupSelectedBtn.addEventListener('click', () => {
   if (state.selectedGroupIndex === null) return;
 
+  const group = state.groups[state.selectedGroupIndex];
+  if (!group) return;
+
+  // Return cards to hand by removing the group
+  state.groups.splice(state.selectedGroupIndex, 1);
+
+  state.selectedGroupIndex = null;
+  state.selected.clear();
+
+  renderHand();
+  renderGroups();
+});
+ungroupSelectedBtn.addEventListener('click', () => {
+  if (state.selectedGroupIndex === null) return;
+
   // Remove selected group
   state.groups.splice(state.selectedGroupIndex, 1);
 
@@ -149,9 +164,16 @@ startGroupBtn.addEventListener('click', () => {
   startGroupFromSelected();
 });
 groupsEl.addEventListener('click', (e) => {
-  const cardEl = e.target.closest('.card');
-  if (!cardEl || !cardEl.dataset.id) return;
-  toggleSelect(cardEl.dataset.id);
+  const groupEl = e.target.closest('.group');
+  if (!groupEl) return;
+
+  const index = Number(groupEl.dataset.index);
+
+  // Toggle selection
+  state.selectedGroupIndex =
+    state.selectedGroupIndex === index ? null : index;
+
+  renderGroups();
 });
 
 
@@ -380,6 +402,12 @@ function renderGroups() {
   state.groups.forEach((group, idx) => {
   const wrap = document.createElement('div');
   wrap.className = 'group';
+  wrap.dataset.index = idx;
+
+  if (state.selectedGroupIndex === idx) {
+  wrap.classList.add('selected');
+}
+
 
   // highlight selected group
   if (state.selectedGroupIndex === idx) {
