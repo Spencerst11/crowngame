@@ -80,8 +80,8 @@ const state = {
   round: 1,
   currentTurn: null,
   goOutPlayerId: null,
-  status: 'lobby',
-  selectedGroupIndex: null,
+status: 'lobby',
+selectedGroupIndex: null
 };
 let bannerTimeout = null;
 
