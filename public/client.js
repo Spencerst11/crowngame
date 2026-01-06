@@ -39,7 +39,18 @@ const playersEl = document.getElementById('players');
 const entryError = document.getElementById('entry-error');
 const startGroupBtn = document.getElementById('start-group');
 const ungroupSelectedBtn = document.getElementById('ungroup-selected');
-const groupsEl = document.getElementById('groups');
+ungroupSelectedBtn.addEventListener('click', () => {
+  if (state.selectedGroupIndex === null) return;
+
+  // Remove selected group
+  state.groups.splice(state.selectedGroupIndex, 1);
+
+  // Reset selection
+  state.selectedGroupIndex = null;
+
+  renderHand();
+  renderGroups();
+});
 const state = {
   roomCode: null,
   you: null,
@@ -54,7 +65,8 @@ const state = {
   round: 1,
   currentTurn: null,
   goOutPlayerId: null,
-  status: 'lobby'
+  status: 'lobby',
+  selectedGroupIndex: null,
 };
 let bannerTimeout = null;
 
@@ -366,29 +378,39 @@ function renderGroups() {
   }
 
   state.groups.forEach((group, idx) => {
-    const wrap = document.createElement('div');
-    wrap.className = 'group';
+  const wrap = document.createElement('div');
+  wrap.className = 'group';
 
-    const title = document.createElement('div');
-    title.textContent = `Group ${idx + 1}`;
-    title.className = 'group-title';
+  // highlight selected group
+  if (state.selectedGroupIndex === idx) {
+    wrap.classList.add('selected');
+  }
 
-    const row = document.createElement('div');
-    row.className = 'group-cards';
-
-    group.cardIds.forEach(id => {
-      const card = state.hand.find(c => c.id === id);
-      if (!card) return;
-      const el = createCard(card);
-      el.dataset.id = id;
-      if (state.selected.has(id)) el.classList.add('selected');
-      row.appendChild(el);
-    });
-
-    wrap.appendChild(title);
-    wrap.appendChild(row);
-    groupsEl.appendChild(wrap);
+  // click to select group
+  wrap.addEventListener('click', (e) => {
+    e.stopPropagation();
+    state.selectedGroupIndex =
+      state.selectedGroupIndex === idx ? null : idx;
+    renderGroups();
   });
+
+  const title = document.createElement('div');
+  title.className = 'group-title';
+  title.textContent = `Group ${idx + 1}`;
+
+  const row = document.createElement('div');
+  row.className = 'group-cards';
+
+  group.cardIds.forEach(id => {
+    const card = state.hand.find(c => c.id === id);
+    if (!card) return;
+    row.appendChild(createCard(card));
+  });
+
+  wrap.appendChild(title);
+  wrap.appendChild(row);
+  groupsEl.appendChild(wrap);
+});
 }
 
 
