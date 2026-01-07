@@ -424,6 +424,7 @@ state.hand
     if (state.selected.has(card.id)) cardEl.classList.add('selected');
     handEl.appendChild(cardEl);
   });
+  }
 function renderGroups() {
   groupsEl.innerHTML = '';
 
