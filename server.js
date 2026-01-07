@@ -477,8 +477,7 @@ socket.on('submit-melds', ({ roomCode, melds, discardCardId, markGoOut }) => {
         p.hasDrawn = false;
       }
     });
-
-
+    
     // Ensure next player can draw
     const nextPlayer = room.players.find(
       p => p.id === room.currentTurnPlayerId
