@@ -18,7 +18,7 @@ const scoreTab = document.getElementById('score-tab');
 const scoreToggle = document.getElementById('score-toggle');
 const resetBtn = document.getElementById('reset-btn');
 const handEl = document.getElementById('hand');
-
+const groupsEl = document.getElementById('groups');
 const meldError = document.getElementById('meld-error');
 const drawBtn = document.getElementById('draw-card');
 const discardBtn = document.getElementById('pickup-discard');
