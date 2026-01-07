@@ -382,13 +382,15 @@ io.on('connection', (socket) => {
     
 
 
-  if (room.goOutPlayerId && player.id !== room.goOutPlayerId) {
+// Mark final-turn completion if needed
+if (room.goOutPlayerId && player.id !== room.goOutPlayerId) {
   player.lastTurnComplete = true;
 }
 
+// 🔁 ADVANCE TURN
+moveTurn(room);
 
-
-// 🔑 RESET hasDrawn FOR THE NEW TURN PLAYER
+// 🔑 Reset draw state for the new player
 const nextPlayer = room.players.find(
   p => p.id === room.currentTurnPlayerId
 );
@@ -396,7 +398,7 @@ if (nextPlayer) {
   nextPlayer.hasDrawn = false;
 }
 
-// After advancing turn, check if round should end
+// 🔚 End round if needed
 if (room.goOutPlayerId) {
   const remaining = room.players.filter(
     p => p.id !== room.goOutPlayerId && !p.lastTurnComplete
@@ -462,26 +464,7 @@ socket.on('submit-melds', ({ roomCode, melds, discardCardId, markGoOut }) => {
     const [discarded] = player.hand.splice(discardIndex, 1);
     room.discardPile.push(discarded);
 
-    // Mark go-out state
-    room.goOutPlayerId = player.id;
-    player.goneOut = true;
-    player.lastTurnComplete = true;
-    player.hasDrawn = false;
 
-    // Reset other players for final turns
-    room.players.forEach(p => {
-      if (p.id !== player.id) {
-        p.lastTurnComplete = false;
-        p.hasDrawn = false;
-      }
-    });
-
-    // Advance turn immediately
-    moveTurn(room);
-
-    broadcastRoom(room);
-    return;
-  }
 
   // Non-go-out meld submission
   broadcastRoom(room);
