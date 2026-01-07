@@ -387,12 +387,21 @@ io.on('connection', (socket) => {
 }
 
 // ALWAYS advance turn after a discard
+// Advance to next player's turn
 moveTurn(room);
 
-// AFTER moving the turn, check if round should end
+// 🔑 RESET hasDrawn FOR THE NEW TURN PLAYER
+const nextPlayer = room.players.find(
+  p => p.id === room.currentTurnPlayerId
+);
+if (nextPlayer) {
+  nextPlayer.hasDrawn = false;
+}
+
+// After advancing turn, check if round should end
 if (room.goOutPlayerId) {
   const remaining = room.players.filter(
-    (p) => p.id !== room.goOutPlayerId && !p.lastTurnComplete
+    p => p.id !== room.goOutPlayerId && !p.lastTurnComplete
   );
 
   if (remaining.length === 0) {
@@ -402,6 +411,7 @@ if (room.goOutPlayerId) {
 }
 
 broadcastRoom(room);
+
   });
 
   socket.on('submit-melds', ({ roomCode, melds, markGoOut }) => {
