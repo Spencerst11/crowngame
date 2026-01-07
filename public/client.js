@@ -150,6 +150,7 @@ discardSelectedBtn.addEventListener('click', () => {
     meldError.textContent = 'Select a single card in your hand to discard.';
     return;
   }
+  animateDiscard(selected[0]);
   socket.emit('discard-card', { roomCode: state.roomCode, cardId: selected[0] });
   state.selected.clear();
 });
@@ -197,6 +198,7 @@ goOutBtn.addEventListener('click', () => {
   }
 
   const discardCardId = remainingCards[0].id;
+  animateDiscard(discardCardId);
   const melds = state.groups.map(g => g.cardIds);
 
   socket.emit('submit-melds', {
@@ -256,7 +258,16 @@ socket.on('create-error', (msg) => {
 socket.on('meld-error', (msg) => {
   meldError.textContent = msg;
 });
+function animateDiscard(cardId) {
+  const cardEl = document.querySelector(`.card[data-id="${cardId}"]`);
+  if (!cardEl) return;
 
+  cardEl.classList.add('discarding');
+
+  setTimeout(() => {
+    cardEl.remove();
+  }, 300);
+}
 socket.on('room-state', (data) => {
   const previousRound = state.round;
   state.roomCode = data.roomCode || state.roomCode;
