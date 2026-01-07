@@ -478,8 +478,6 @@ socket.on('submit-melds', ({ roomCode, melds, discardCardId, markGoOut }) => {
       }
     });
 
-    // Advance turn immediately
-    moveTurn(room);
 
     // Ensure next player can draw
     const nextPlayer = room.players.find(
