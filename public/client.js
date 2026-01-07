@@ -72,7 +72,7 @@ const state = {
   hand: [],
   groups: [],
   selected: new Set(),
- 
+ discarding: new Set(),
   wildRank: null,
   players: [],
   discardTop: null,
@@ -262,9 +262,13 @@ function animateDiscard(cardId) {
   const cardEl = document.querySelector(`.card[data-id="${cardId}"]`);
   if (!cardEl) return;
 
+  // Mark as discarding so renderHand ignores it
+  state.discarding.add(cardId);
+
   cardEl.classList.add('discarding');
 
   setTimeout(() => {
+    state.discarding.delete(cardId);
     cardEl.remove();
   }, 300);
 }
@@ -409,15 +413,17 @@ function renderHand() {
   handEl.innerHTML = '';
   const groupedIds = new Set(state.groups.flatMap(g => g.cardIds));
 
-  state.hand
-    .filter(card => !groupedIds.has(card.id))
-    .forEach(card => {
-      const cardEl = createCard(card);
-      cardEl.dataset.id = card.id;
-      if (state.selected.has(card.id)) cardEl.classList.add('selected');
-      handEl.appendChild(cardEl);
-    });
-}
+state.hand
+  .filter(card =>
+    !groupedIds.has(card.id) &&
+    !state.discarding.has(card.id)
+  )
+  .forEach(card => {
+    const cardEl = createCard(card);
+    cardEl.dataset.id = card.id;
+    if (state.selected.has(card.id)) cardEl.classList.add('selected');
+    handEl.appendChild(cardEl);
+  });
 function renderGroups() {
   groupsEl.innerHTML = '';
 
