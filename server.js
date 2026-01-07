@@ -22,7 +22,7 @@ const rankOrder = ['3','4','5','6','7','8','9','10','J','Q','K'];
 const suits = ['stars','diamonds','hearts','spades','clubs'];
 
 /* =========================
-   Deck + Helpers
+   Deck Helpers
 ========================= */
 
 function createDeck() {
@@ -33,7 +33,9 @@ function createDeck() {
         deck.push({ id: uuidv4(), rank: r, suit: s })
       )
     );
-    for (let j = 0; j < 3; j++) deck.push({ id: uuidv4(), rank: 'Joker', suit: 'joker' });
+    for (let j = 0; j < 3; j++) {
+      deck.push({ id: uuidv4(), rank: 'Joker', suit: 'joker' });
+    }
   }
   return deck;
 }
@@ -51,6 +53,15 @@ function getWildRank(n) {
   if (n === 11) return 'J';
   if (n === 12) return 'Q';
   return 'K';
+}
+
+function cardValue(card, wildRank) {
+  if (card.rank === 'Joker') return 50;
+  if (card.rank === wildRank) return 20;
+  if (card.rank === 'J') return 11;
+  if (card.rank === 'Q') return 12;
+  if (card.rank === 'K') return 13;
+  return Number(card.rank);
 }
 
 /* =========================
@@ -81,7 +92,8 @@ function broadcastRoom(room) {
         ready: x.ready,
         handCount: x.hand.length,
         score: x.score,
-        goneOut: x.goneOut
+        goneOut: x.goneOut,
+        lastTurnComplete: x.lastTurnComplete
       })),
       hand: p.hand
     });
@@ -89,7 +101,7 @@ function broadcastRoom(room) {
 }
 
 /* =========================
-   Turn Control
+   Turn Helpers
 ========================= */
 
 function advanceTurn(room) {
@@ -99,7 +111,7 @@ function advanceTurn(room) {
 }
 
 /* =========================
-   Round Control
+   Round Helpers
 ========================= */
 
 function startRound(room) {
@@ -113,6 +125,7 @@ function startRound(room) {
     p.hand = [];
     p.hasDrawn = false;
     p.goneOut = false;
+    p.lastTurnComplete = false;
   });
 
   const cards = room.round + 2;
@@ -129,8 +142,24 @@ function startRound(room) {
 }
 
 function endRound(room) {
-  room.round++;
+  const cardsPerPlayer = room.round + 2;
+  const wildRank = getWildRank(cardsPerPlayer);
+
+  room.players.forEach(p => {
+    if (!p.goneOut) {
+      const score = p.hand.reduce(
+        (sum, c) => sum + cardValue(c, wildRank),
+        0
+      );
+      p.score += score;
+    }
+    p.hand = [];
+    p.hasDrawn = false;
+  });
+
+  room.round += 1;
   room.status = room.round > TOTAL_ROUNDS ? 'finished' : 'lobby';
+
   broadcastRoom(room);
 }
 
@@ -148,7 +177,6 @@ io.on('connection', socket => {
       code: roomCode,
       players: [],
       round: 1,
-      dealerIndex: 0,
       drawPile: [],
       discardPile: [],
       status: 'lobby',
@@ -164,7 +192,8 @@ io.on('connection', socket => {
       score: 0,
       hand: [],
       hasDrawn: false,
-      goneOut: false
+      goneOut: false,
+      lastTurnComplete: false
     });
 
     rooms.set(roomCode, room);
@@ -185,7 +214,8 @@ io.on('connection', socket => {
       score: 0,
       hand: [],
       hasDrawn: false,
-      goneOut: false
+      goneOut: false,
+      lastTurnComplete: false
     });
 
     socket.join(roomCode);
@@ -203,7 +233,9 @@ io.on('connection', socket => {
     if (
       room.players.length >= MIN_PLAYERS &&
       room.players.every(p => p.ready)
-    ) startRound(room);
+    ) {
+      startRound(room);
+    }
 
     broadcastRoom(room);
   });
@@ -242,6 +274,20 @@ io.on('connection', socket => {
     room.discardPile.push(player.hand.splice(idx, 1)[0]);
     player.hasDrawn = false;
 
+    // FINAL TURN HANDLING
+    if (room.goOutPlayerId && player.id !== room.goOutPlayerId) {
+      player.lastTurnComplete = true;
+
+      const remaining = room.players.filter(
+        p => p.id !== room.goOutPlayerId && !p.lastTurnComplete
+      );
+
+      if (remaining.length === 0) {
+        endRound(room);
+        return;
+      }
+    }
+
     advanceTurn(room);
     broadcastRoom(room);
   });
@@ -252,15 +298,17 @@ io.on('connection', socket => {
 
     if (!room || room.status !== 'playing') return;
     if (room.currentTurnPlayerId !== player.id) return;
+    if (!player.hasDrawn) return;
 
-    // GO OUT
     if (markGoOut) {
       const idx = player.hand.findIndex(c => c.id === discardCardId);
       if (idx === -1) return;
 
       room.discardPile.push(player.hand.splice(idx, 1)[0]);
-      player.goneOut = true;
+
       room.goOutPlayerId = player.id;
+      player.goneOut = true;
+      player.lastTurnComplete = true;
       player.hasDrawn = false;
 
       advanceTurn(room);
