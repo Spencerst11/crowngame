@@ -414,58 +414,83 @@ broadcastRoom(room);
 });
 
 socket.on('submit-melds', ({ roomCode, melds, discardCardId, markGoOut }) => {
-    const room = rooms.get(roomCode);
-    if (!room) return;
-    const player = room.players.find((p) => p.id === socket.id);
-    if (!player) return;
-    if (room.status !== 'playing') return;
-    if (markGoOut && room.currentTurnPlayerId !== player.id) {
-      socket.emit('meld-error', 'You can only go out on your turn.');
-      return;
-    }
-    if (markGoOut && !player.hasDrawn) {
-      socket.emit('meld-error', 'Draw first, then go out with one card left to discard.');
-      return;
-    }
-    const cardsPerPlayer = room.round + 2;
-    const wildRank = getWildRank(cardsPerPlayer);
-    const validation = validateMelds(player.hand, melds, wildRank);
-    if (!validation.ok) {
-      socket.emit('meld-error', validation.message);
-      return;
-    }
-    player.laidMelds = validation.usedCards;
-    player.laidMeldIds = validation.usedIds;
- if (markGoOut) {
-  if (player.hand.length - player.laidMelds.length !== 1) {
-    socket.emit('meld-error', 'You must leave one card to discard when going out.');
+  const room = rooms.get(roomCode);
+  if (!room) return;
+
+  const player = room.players.find((p) => p.id === socket.id);
+  if (!player) return;
+
+  if (room.status !== 'playing') return;
+
+  if (markGoOut && room.currentTurnPlayerId !== player.id) {
+    socket.emit('meld-error', 'You can only go out on your turn.');
     return;
   }
 
-  // 🔥 ACTUALLY discard the last card on the server
-  const discardIndex = player.hand.findIndex(c => c.id === discardCardId);
-  if (discardIndex === -1) {
-    socket.emit('meld-error', 'Discard card not found.');
+  if (markGoOut && !player.hasDrawn) {
+    socket.emit('meld-error', 'Draw first, then go out with one card left to discard.');
     return;
   }
 
-  const [discarded] = player.hand.splice(discardIndex, 1);
-  room.discardPile.push(discarded);
+  const cardsPerPlayer = room.round + 2;
+  const wildRank = getWildRank(cardsPerPlayer);
 
-  // Mark go-out state
-  room.goOutPlayerId = player.id;
-  player.goneOut = true;
-  player.lastTurnComplete = true;
-  player.hasDrawn = false;
+  const validation = validateMelds(player.hand, melds, wildRank);
+  if (!validation.ok) {
+    socket.emit('meld-error', validation.message);
+    return;
+  }
 
-  // Reset others for final turn
-  room.players.forEach(p => {
-    if (p.id !== player.id) {
-      p.lastTurnComplete = false;
-      p.hasDrawn = false;
+  player.laidMelds = validation.usedCards;
+  player.laidMeldIds = validation.usedIds;
+
+  if (markGoOut) {
+    // Must have exactly one un-melded card left
+    if (player.hand.length - player.laidMeldIds.length !== 1) {
+      socket.emit('meld-error', 'You must leave one card to discard when going out.');
+      return;
     }
-  });
 
+    // discardCardId must be provided by client
+    const discardIndex = player.hand.findIndex(c => c.id === discardCardId);
+    if (discardIndex === -1) {
+      socket.emit('meld-error', 'Discard card not found.');
+      return;
+    }
+
+    // Actually discard it on the server
+    const [discarded] = player.hand.splice(discardIndex, 1);
+    room.discardPile.push(discarded);
+
+    // Mark go-out
+    room.goOutPlayerId = player.id;
+    player.goneOut = true;
+    player.lastTurnComplete = true;
+
+    // End this player's turn state
+    player.hasDrawn = false;
+
+    // Reset other players for their final turn
+    room.players.forEach(p => {
+      if (p.id !== player.id) {
+        p.lastTurnComplete = false;
+        p.hasDrawn = false;
+      }
+    });
+
+    // Advance turn immediately to next player
+    moveTurn(room);
+
+    // Ensure new current player starts clean
+    const nextPlayer = room.players.find(p => p.id === room.currentTurnPlayerId);
+    if (nextPlayer) nextPlayer.hasDrawn = false;
+
+    broadcastRoom(room);
+    return;
+  }
+
+  broadcastRoom(room);
+});
   // 🔄 Advance turn IMMEDIATELY
   moveTurn(room);
 }
