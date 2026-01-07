@@ -33,9 +33,7 @@ function createDeck() {
         deck.push({ id: uuidv4(), rank: r, suit: s })
       )
     );
-    for (let j = 0; j < 3; j++) {
-      deck.push({ id: uuidv4(), rank: 'Joker', suit: 'joker' });
-    }
+    for (let j = 0; j < 3; j++) deck.push({ id: uuidv4(), rank: 'Joker', suit: 'joker' });
   }
   return deck;
 }
@@ -65,12 +63,11 @@ function cardValue(card, wildRank) {
 }
 
 /* =========================
-   Room Broadcast
+   Broadcast
 ========================= */
 
 function broadcastRoom(room) {
-  const cardsPerPlayer = room.round + 2;
-  const wildRank = getWildRank(cardsPerPlayer);
+  const wildRank = getWildRank(room.round + 2);
 
   room.players.forEach(p => {
     const sock = io.sockets.sockets.get(p.id);
@@ -92,8 +89,7 @@ function broadcastRoom(room) {
         ready: x.ready,
         handCount: x.hand.length,
         score: x.score,
-        goneOut: x.goneOut,
-        lastTurnComplete: x.lastTurnComplete
+        goneOut: x.goneOut
       })),
       hand: p.hand
     });
@@ -101,31 +97,18 @@ function broadcastRoom(room) {
 }
 
 /* =========================
-   Turn Control (skip goneOut)
+   Turn Control
 ========================= */
 
 function advanceTurn(room) {
-  if (!room.turnOrder.length) return;
-
-  let safety = 0;
   let idx = room.turnOrder.indexOf(room.currentTurnPlayerId);
-  if (idx === -1) idx = 0;
-
-  while (safety < room.turnOrder.length + 2) {
+  do {
     idx = (idx + 1) % room.turnOrder.length;
-    const nextId = room.turnOrder[idx];
-    const nextPlayer = room.players.find(p => p.id === nextId);
-
-    // Skip players who already went out (they should not keep taking turns)
-    if (nextPlayer && !nextPlayer.goneOut) {
-      room.currentTurnPlayerId = nextId;
-      return;
-    }
-    safety++;
-  }
-
-  // Fallback if somehow everyone is goneOut (shouldn't happen mid-round)
-  room.currentTurnPlayerId = room.turnOrder[0];
+    room.currentTurnPlayerId = room.turnOrder[idx];
+  } while (
+    room.goOutPlayerId &&
+    room.players.find(p => p.id === room.currentTurnPlayerId)?.lastTurnComplete
+  );
 }
 
 /* =========================
@@ -144,7 +127,7 @@ function startRound(room) {
     p.hasDrawn = false;
     p.goneOut = false;
     p.lastTurnComplete = false;
-    p.ready = false; // you re-ready each round (if you ever use lobby again)
+    p.ready = false;
   });
 
   const cards = room.round + 2;
@@ -153,35 +136,24 @@ function startRound(room) {
   }
 
   room.discardPile.push(room.drawPile.pop());
-
   room.turnOrder = room.players.map(p => p.id);
-
-  // Start with 2nd seat like your current logic
   room.currentTurnPlayerId = room.turnOrder[1 % room.turnOrder.length];
 
   broadcastRoom(room);
 }
 
-function endRoundAndMaybeStartNext(room) {
-  const cardsPerPlayer = room.round + 2;
-  const wildRank = getWildRank(cardsPerPlayer);
+function endRoundAndStartNext(room) {
+  const wildRank = getWildRank(room.round + 2);
 
-  // Add scores for players who did NOT go out
   room.players.forEach(p => {
-    if (p.goneOut) return; // ✅ went out = 0 points for this round
-    const add = p.hand.reduce((sum, card) => sum + cardValue(card, wildRank), 0);
-    p.score += add;
-  });
-
-  // Clear hands and per-round state
-  room.players.forEach(p => {
+    if (!p.goneOut) {
+      p.score += p.hand.reduce((s, c) => s + cardValue(c, wildRank), 0);
+    }
     p.hand = [];
     p.hasDrawn = false;
-    p.goneOut = false;
-    p.lastTurnComplete = false;
   });
 
-  room.round++;
+  room.round += 1;
 
   if (room.round > TOTAL_ROUNDS) {
     room.status = 'finished';
@@ -189,7 +161,6 @@ function endRoundAndMaybeStartNext(room) {
     return;
   }
 
-  // ✅ Auto-start next round immediately (what you asked for)
   startRound(room);
 }
 
@@ -201,7 +172,6 @@ io.on('connection', socket => {
 
   socket.on('create-room', ({ roomCode, name, password }) => {
     if (password !== PASSWORD) return socket.emit('create-error', 'Wrong password');
-    if (!roomCode || !name) return socket.emit('create-error', 'Room code and name required');
     if (rooms.has(roomCode)) return socket.emit('create-error', 'Room exists');
 
     const room = {
@@ -237,7 +207,6 @@ io.on('connection', socket => {
     const room = rooms.get(roomCode);
     if (!room) return socket.emit('join-error', 'Room not found');
     if (password !== PASSWORD) return socket.emit('join-error', 'Wrong password');
-    if (room.players.length >= MAX_PLAYERS) return socket.emit('join-error', 'Room full');
 
     room.players.push({
       id: socket.id,
@@ -257,32 +226,24 @@ io.on('connection', socket => {
 
   socket.on('toggle-ready', ({ roomCode }) => {
     const room = rooms.get(roomCode);
-    if (!room) return;
-
-    if (room.status !== 'lobby') return;
+    if (!room || room.status !== 'lobby') return;
 
     const player = room.players.find(p => p.id === socket.id);
-    if (!player) return;
-
     player.ready = !player.ready;
 
-    const allReady =
+    if (
       room.players.length >= MIN_PLAYERS &&
-      room.players.every(p => p.ready);
+      room.players.every(p => p.ready)
+    ) startRound(room);
 
     broadcastRoom(room);
-
-    if (allReady) startRound(room);
   });
 
   socket.on('draw-card', ({ roomCode, source }) => {
     const room = rooms.get(roomCode);
     const player = room?.players.find(p => p.id === socket.id);
-
     if (!room || room.status !== 'playing') return;
-    if (!player) return;
     if (room.currentTurnPlayerId !== player.id) return;
-    if (player.goneOut) return;
     if (player.hasDrawn) return;
 
     const card = source === 'discard'
@@ -290,7 +251,6 @@ io.on('connection', socket => {
       : room.drawPile.pop();
 
     if (!card) return;
-
     player.hand.push(card);
     player.hasDrawn = true;
 
@@ -300,11 +260,8 @@ io.on('connection', socket => {
   socket.on('discard-card', ({ roomCode, cardId }) => {
     const room = rooms.get(roomCode);
     const player = room?.players.find(p => p.id === socket.id);
-
     if (!room || room.status !== 'playing') return;
-    if (!player) return;
     if (room.currentTurnPlayerId !== player.id) return;
-    if (player.goneOut) return;
     if (!player.hasDrawn) return;
 
     const idx = player.hand.findIndex(c => c.id === cardId);
@@ -313,112 +270,53 @@ io.on('connection', socket => {
     room.discardPile.push(player.hand.splice(idx, 1)[0]);
     player.hasDrawn = false;
 
-    // ✅ If someone already went out, this discard ends THIS player's final turn
-    if (room.goOutPlayerId && player.id !== room.goOutPlayerId) {
+    if (room.goOutPlayerId) {
       player.lastTurnComplete = true;
-
-      // If all non-goOut players have completed their last turn -> end round
-      const remaining = room.players.filter(p =>
-        p.id !== room.goOutPlayerId && !p.lastTurnComplete
-      );
-
-      if (remaining.length === 0) {
-        endRoundAndMaybeStartNext(room);
-        return;
-      }
+      const allDone = room.players.every(p => p.goneOut || p.lastTurnComplete);
+      if (allDone) return endRoundAndStartNext(room);
     }
 
-    // Normal turn advance
     advanceTurn(room);
-
-    // Ensure the next current player starts fresh
-    const next = room.players.find(p => p.id === room.currentTurnPlayerId);
-    if (next) next.hasDrawn = false;
-
     broadcastRoom(room);
   });
 
   socket.on('submit-melds', ({ roomCode, discardCardId, markGoOut }) => {
     const room = rooms.get(roomCode);
     const player = room?.players.find(p => p.id === socket.id);
-
     if (!room || room.status !== 'playing') return;
-    if (!player) return;
     if (room.currentTurnPlayerId !== player.id) return;
-    if (!markGoOut) return;
+    if (!markGoOut || !player.hasDrawn) return;
 
-    // Must have drawn first
-    if (!player.hasDrawn) return;
-
-    // Discard the last card server-side
     const idx = player.hand.findIndex(c => c.id === discardCardId);
     if (idx === -1) return;
 
     room.discardPile.push(player.hand.splice(idx, 1)[0]);
-
-    // Mark go-out
-    room.goOutPlayerId = player.id;
     player.goneOut = true;
     player.lastTurnComplete = true;
     player.hasDrawn = false;
 
-    // Give everyone else exactly one final turn
-    room.players.forEach(p => {
-      if (p.id !== player.id) {
-        p.lastTurnComplete = false;
-        p.hasDrawn = false;
-      }
-    });
+    if (!room.goOutPlayerId) {
+      room.goOutPlayerId = player.id;
+      room.players.forEach(p => {
+        if (p.id !== player.id) {
+          p.lastTurnComplete = false;
+          p.hasDrawn = false;
+        }
+      });
+    }
 
-    // Advance immediately to the next player (skip goneOut players)
+    const allDone = room.players.every(p => p.goneOut || p.lastTurnComplete);
+    if (allDone) return endRoundAndStartNext(room);
+
     advanceTurn(room);
-
-    const next = room.players.find(p => p.id === room.currentTurnPlayerId);
-    if (next) next.hasDrawn = false;
-
-    broadcastRoom(room);
-  });
-
-  socket.on('reset-round', ({ roomCode }) => {
-    const room = rooms.get(roomCode);
-    if (!room) return;
-
-    room.status = 'lobby';
-    room.round = 1;
-    room.goOutPlayerId = null;
-    room.currentTurnPlayerId = null;
-    room.drawPile = [];
-    room.discardPile = [];
-    room.turnOrder = [];
-
-    room.players.forEach(p => {
-      p.ready = false;
-      p.score = 0;
-      p.hand = [];
-      p.hasDrawn = false;
-      p.goneOut = false;
-      p.lastTurnComplete = false;
-    });
-
     broadcastRoom(room);
   });
 
   socket.on('disconnect', () => {
     rooms.forEach((room, code) => {
       room.players = room.players.filter(p => p.id !== socket.id);
-
-      if (!room.players.length) {
-        rooms.delete(code);
-        return;
-      }
-
-      room.turnOrder = room.players.map(p => p.id);
-
-      if (room.currentTurnPlayerId === socket.id) {
-        room.currentTurnPlayerId = room.turnOrder[0] || null;
-      }
-
-      broadcastRoom(room);
+      if (!room.players.length) rooms.delete(code);
+      else broadcastRoom(room);
     });
   });
 });
