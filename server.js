@@ -411,10 +411,9 @@ if (room.goOutPlayerId) {
 }
 
 broadcastRoom(room);
+});
 
-  });
-
-  socket.on('submit-melds', ({ roomCode, melds, markGoOut }) => {
+socket.on('submit-melds', ({ roomCode, melds, discardCardId, markGoOut }) => {
     const room = rooms.get(roomCode);
     if (!room) return;
     const player = room.players.find((p) => p.id === socket.id);
@@ -437,17 +436,39 @@ broadcastRoom(room);
     }
     player.laidMelds = validation.usedCards;
     player.laidMeldIds = validation.usedIds;
-   if (markGoOut) {
-  // Identify remaining card (exactly one)
-  const remainingCard = player.hand.find(
-    c => !player.laidMeldIds.includes(c.id)
-  );
-
-  if (!remainingCard) {
-    socket.emit('meld-error', 'No card to discard.');
+ if (markGoOut) {
+  if (player.hand.length - player.laidMelds.length !== 1) {
+    socket.emit('meld-error', 'You must leave one card to discard when going out.');
     return;
   }
 
+  // 🔥 ACTUALLY discard the last card on the server
+  const discardIndex = player.hand.findIndex(c => c.id === discardCardId);
+  if (discardIndex === -1) {
+    socket.emit('meld-error', 'Discard card not found.');
+    return;
+  }
+
+  const [discarded] = player.hand.splice(discardIndex, 1);
+  room.discardPile.push(discarded);
+
+  // Mark go-out state
+  room.goOutPlayerId = player.id;
+  player.goneOut = true;
+  player.lastTurnComplete = true;
+  player.hasDrawn = false;
+
+  // Reset others for final turn
+  room.players.forEach(p => {
+    if (p.id !== player.id) {
+      p.lastTurnComplete = false;
+      p.hasDrawn = false;
+    }
+  });
+
+  // 🔄 Advance turn IMMEDIATELY
+  moveTurn(room);
+}
   // 🔥 SERVER-AUTHORITATIVE DISCARD
   player.hand = player.hand.filter(c => c.id !== remainingCard.id);
   room.discardPile.push(remainingCard);
