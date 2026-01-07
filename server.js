@@ -386,9 +386,7 @@ io.on('connection', (socket) => {
   player.lastTurnComplete = true;
 }
 
-// ALWAYS advance turn after a discard
-// Advance to next player's turn
-moveTurn(room);
+
 
 // 🔑 RESET hasDrawn FOR THE NEW TURN PLAYER
 const nextPlayer = room.players.find(
@@ -464,7 +462,7 @@ socket.on('submit-melds', ({ roomCode, melds, discardCardId, markGoOut }) => {
     const [discarded] = player.hand.splice(discardIndex, 1);
     room.discardPile.push(discarded);
 
-    // Mark go-out
+    // Mark go-out state
     room.goOutPlayerId = player.id;
     player.goneOut = true;
     player.lastTurnComplete = true;
@@ -477,12 +475,9 @@ socket.on('submit-melds', ({ roomCode, melds, discardCardId, markGoOut }) => {
         p.hasDrawn = false;
       }
     });
-    
-    // Ensure next player can draw
-    const nextPlayer = room.players.find(
-      p => p.id === room.currentTurnPlayerId
-    );
-    if (nextPlayer) nextPlayer.hasDrawn = false;
+
+    // Advance turn immediately
+    moveTurn(room);
 
     broadcastRoom(room);
     return;
@@ -491,70 +486,6 @@ socket.on('submit-melds', ({ roomCode, melds, discardCardId, markGoOut }) => {
   // Non-go-out meld submission
   broadcastRoom(room);
 });
-
-    // Advance turn immediately to next player
-    moveTurn(room);
-
-    // Ensure new current player starts clean
-    const nextPlayer = room.players.find(p => p.id === room.currentTurnPlayerId);
-    if (nextPlayer) nextPlayer.hasDrawn = false;
-
-    broadcastRoom(room);
-    return;
-  }
-
-  broadcastRoom(room);
-});
-  // 🔄 Advance turn IMMEDIATELY
-  moveTurn(room);
-}
-  // 🔥 SERVER-AUTHORITATIVE DISCARD
-  player.hand = player.hand.filter(c => c.id !== remainingCard.id);
-  room.discardPile.push(remainingCard);
-
-  // Mark go-out state
-  room.goOutPlayerId = player.id;
-  player.goneOut = true;
-  player.hasDrawn = false;
-  player.lastTurnComplete = true;
-
-  // Prepare remaining players for final turns
-  room.players.forEach(p => {
-    if (p.id !== player.id) {
-      p.lastTurnComplete = false;
-    }
-  });
-
-  // Advance turn immediately
-  moveTurn(room);
-
-  // Reset draw state for next player
-  const nextPlayer = room.players.find(
-    p => p.id === room.currentTurnPlayerId
-  );
-  if (nextPlayer) {
-    nextPlayer.hasDrawn = false;
-  }
-
-  broadcastRoom(room);
-  return;
-}
-      room.goOutPlayerId = player.id;
-      player.goneOut = true;
-      room.players.forEach((p) => {
-        if (p.id !== player.id) {
-          p.lastTurnComplete = false;
-        }
-      });
-    }
-    broadcastRoom(room);
-  });
-
-  socket.on('request-state', ({ roomCode }) => {
-    const room = rooms.get(roomCode);
-    if (!room) return;
-    broadcastRoom(room);
-  });
 
   socket.on('reset-round', ({ roomCode }) => {
     const room = rooms.get(roomCode);
@@ -582,7 +513,7 @@ socket.on('submit-melds', ({ roomCode, melds, discardCardId, markGoOut }) => {
         } else {
           room.turnOrder = room.turnOrder.filter((id) => id !== socket.id);
           if (room.turnOrder.length && room.currentTurnPlayerId === socket.id) {
-            moveTurn(room);
+           
           }
           broadcastRoom(room);
         }
