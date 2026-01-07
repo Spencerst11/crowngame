@@ -1,3 +1,4 @@
+// server.js
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -12,11 +13,9 @@ const TOTAL_ROUNDS = 11;
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
+  cors: { origin: '*', methods: ['GET', 'POST'] },
 });
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 const rooms = new Map();
@@ -27,30 +26,22 @@ const suits = [
   { key: 'diamonds', color: 'blue', symbol: '◆' },
   { key: 'hearts', color: 'red', symbol: '♥' },
   { key: 'spades', color: 'black', symbol: '♠' },
-  { key: 'clubs', color: 'green', symbol: '♣' }
+  { key: 'clubs', color: 'green', symbol: '♣' },
 ];
+
+function createCard(rank, suit) {
+  return { id: uuidv4(), rank, suit };
+}
 
 function createDeck() {
   const deck = [];
   for (let deckIndex = 0; deckIndex < 2; deckIndex += 1) {
     suits.forEach((suit) => {
-      rankOrder.forEach((rank) => {
-        deck.push(createCard(rank, suit.key));
-      });
+      rankOrder.forEach((rank) => deck.push(createCard(rank, suit.key)));
     });
-    for (let j = 0; j < 3; j += 1) {
-      deck.push(createCard('Joker', 'joker'));
-    }
+    for (let j = 0; j < 3; j += 1) deck.push(createCard('Joker', 'joker'));
   }
   return deck;
-}
-
-function createCard(rank, suit) {
-  return {
-    id: uuidv4(),
-    rank,
-    suit
-  };
 }
 
 function shuffle(deck) {
@@ -63,9 +54,7 @@ function shuffle(deck) {
 }
 
 function getWildRank(cardsPerPlayer) {
-  if (cardsPerPlayer <= 10) {
-    return String(cardsPerPlayer);
-  }
+  if (cardsPerPlayer <= 10) return String(cardsPerPlayer);
   if (cardsPerPlayer === 11) return 'J';
   if (cardsPerPlayer === 12) return 'Q';
   return 'K';
@@ -96,9 +85,69 @@ function reshuffleIfNeeded(room) {
   }
 }
 
+function isValidBook(cards, wildRank) {
+  const nonWild = cards.filter((c) => !isWild(c, wildRank));
+  if (nonWild.length === 0) return true;
+  const rank = nonWild[0].rank;
+  return nonWild.every((c) => c.rank === rank);
+}
+
+function isValidRun(cards, wildRank) {
+  const nonWild = cards.filter((c) => !isWild(c, wildRank));
+  if (nonWild.length === 0) return true;
+
+  const suit = nonWild[0].suit;
+  if (!nonWild.every((c) => c.suit === suit)) return false;
+
+  const sorted = nonWild.sort((a, b) => rankToIndex(a.rank) - rankToIndex(b.rank));
+
+  let neededGaps = 0;
+  for (let i = 1; i < sorted.length; i += 1) {
+    const prevIndex = rankToIndex(sorted[i - 1].rank);
+    const currentIndex = rankToIndex(sorted[i].rank);
+    const gap = currentIndex - prevIndex - 1;
+    if (gap < 0) return false;
+    neededGaps += gap;
+  }
+
+  const wildCount = cards.filter((c) => isWild(c, wildRank)).length;
+  return neededGaps <= wildCount;
+}
+
+function validateMelds(hand, melds, wildRank) {
+  if (!Array.isArray(melds)) return { ok: false, message: 'Meld data missing' };
+
+  const handMap = new Map(hand.map((card) => [card.id, card]));
+  const used = new Set();
+  const usedCards = [];
+
+  for (const meld of melds) {
+    if (!Array.isArray(meld) || meld.length < 3) {
+      return { ok: false, message: 'Each meld must have at least 3 cards' };
+    }
+
+    const cards = [];
+    for (const id of meld) {
+      if (used.has(id)) return { ok: false, message: 'Card used twice in melds' };
+      const card = handMap.get(id);
+      if (!card) return { ok: false, message: 'Card not in hand' };
+      used.add(id);
+      cards.push(card);
+      usedCards.push(card);
+    }
+
+    if (!isValidBook(cards, wildRank) && !isValidRun(cards, wildRank)) {
+      return { ok: false, message: 'Invalid book or run' };
+    }
+  }
+
+  return { ok: true, usedIds: Array.from(used), usedCards };
+}
+
 function getRoomStateForBroadcast(room) {
   const cardsPerPlayer = room.round + 2;
   const wildRank = getWildRank(cardsPerPlayer);
+
   return {
     round: room.round,
     cardsPerPlayer,
@@ -116,24 +165,23 @@ function getRoomStateForBroadcast(room) {
       score: p.score,
       goneOut: p.goneOut,
       laidMelds: p.laidMelds,
-      lastTurnComplete: p.lastTurnComplete
-    }))
+      lastTurnComplete: p.lastTurnComplete,
+    })),
   };
 }
 
 function broadcastRoom(room) {
   const baseState = getRoomStateForBroadcast(room);
   room.players.forEach((player) => {
-    const socket = io.sockets.sockets.get(player.id);
-    if (socket) {
-      socket.emit('room-state', {
-        roomCode: room.code,
-        ...baseState,
-        you: player.id,
-        hand: player.hand,
-        laidMelds: player.laidMelds
-      });
-    }
+    const s = io.sockets.sockets.get(player.id);
+    if (!s) return;
+    s.emit('room-state', {
+      roomCode: room.code,
+      ...baseState,
+      you: player.id,
+      hand: player.hand,
+      laidMelds: player.laidMelds,
+    });
   });
 }
 
@@ -144,6 +192,7 @@ function startRound(room) {
   room.status = 'playing';
   room.goOutPlayerId = null;
   room.currentTurnPlayerId = null;
+
   room.players.forEach((p) => {
     p.hand = [];
     p.ready = false;
@@ -167,8 +216,13 @@ function startRound(room) {
 
   const dealer = room.dealerIndex % room.players.length;
   const nextIndex = (dealer + 1) % room.players.length;
+
   room.currentTurnPlayerId = room.players[nextIndex].id;
   room.turnOrder = room.players.map((p) => p.id);
+
+  // make sure first turn can draw
+  const first = room.players.find((p) => p.id === room.currentTurnPlayerId);
+  if (first) first.hasDrawn = false;
 
   broadcastRoom(room);
 }
@@ -176,18 +230,20 @@ function startRound(room) {
 function endRound(room) {
   const cardsPerPlayer = room.round + 2;
   const wildRank = getWildRank(cardsPerPlayer);
+
   room.players.forEach((player) => {
-    const leftover = player.hand.filter(
-      (c) => !player.laidMeldIds.includes(c.id)
-    );
+    const leftover = player.hand.filter((c) => !player.laidMeldIds.includes(c.id));
     const scoreAdd = leftover.reduce((sum, card) => sum + cardValue(card, wildRank), 0);
+
     player.score += scoreAdd;
     player.hand = [];
     player.hasDrawn = false;
   });
+
   room.round += 1;
   room.status = room.round > TOTAL_ROUNDS ? 'finished' : 'lobby';
   room.dealerIndex = (room.dealerIndex + 1) % room.players.length;
+
   broadcastRoom(room);
 }
 
@@ -197,75 +253,29 @@ function moveTurn(room) {
   room.currentTurnPlayerId = room.turnOrder[nextIdx];
 }
 
-function validateMelds(hand, melds, wildRank) {
-  if (!Array.isArray(melds)) return { ok: false, message: 'Meld data missing' };
-  const handMap = new Map(hand.map((card) => [card.id, card]));
-  const used = new Set();
-  const usedCards = [];
+/**
+ * For the "final turns" after someone goes out:
+ * If the current turn lands on the go-out player, skip them.
+ * (They should not take another turn.)
+ */
+function advanceTurnSkippingGoOut(room) {
+  moveTurn(room);
+  if (!room.goOutPlayerId) return;
 
-  for (const meld of melds) {
-    if (!Array.isArray(meld) || meld.length < 3) {
-      return { ok: false, message: 'Each meld must have at least 3 cards' };
-    }
-    const cards = [];
-    for (const id of meld) {
-      if (used.has(id)) {
-        return { ok: false, message: 'Card used twice in melds' };
-      }
-      const card = handMap.get(id);
-      if (!card) {
-        return { ok: false, message: 'Card not in hand' };
-      }
-      used.add(id);
-      cards.push(card);
-      usedCards.push(card);
-    }
-    if (!isValidBook(cards, wildRank) && !isValidRun(cards, wildRank)) {
-      return { ok: false, message: 'Invalid book or run' };
-    }
+  // Skip the go-out player if we land on them
+  let safety = 0;
+  while (room.currentTurnPlayerId === room.goOutPlayerId && safety < room.turnOrder.length) {
+    moveTurn(room);
+    safety += 1;
   }
-  return { ok: true, usedIds: Array.from(used), usedCards };
-}
-
-function isValidBook(cards, wildRank) {
-  const nonWild = cards.filter((c) => !isWild(c, wildRank));
-  if (nonWild.length === 0) return true;
-  const rank = nonWild[0].rank;
-  return nonWild.every((c) => c.rank === rank);
-}
-
-function isValidRun(cards, wildRank) {
-  const nonWild = cards.filter((c) => !isWild(c, wildRank));
-  if (nonWild.length === 0) return true;
-  const suit = nonWild[0].suit;
-  if (!nonWild.every((c) => c.suit === suit)) return false;
-  const sorted = nonWild.sort((a, b) => rankToIndex(a.rank) - rankToIndex(b.rank));
-  let neededGaps = 0;
-  for (let i = 1; i < sorted.length; i += 1) {
-    const prevIndex = rankToIndex(sorted[i - 1].rank);
-    const currentIndex = rankToIndex(sorted[i].rank);
-    const gap = currentIndex - prevIndex - 1;
-    if (gap < 0) return false;
-    neededGaps += gap;
-  }
-  const wildCount = cards.filter((c) => isWild(c, wildRank)).length;
-  return neededGaps <= wildCount;
 }
 
 io.on('connection', (socket) => {
   socket.on('create-room', ({ roomCode, name, password }) => {
-    if (password !== PASSWORD) {
-      socket.emit('create-error', 'Incorrect password.');
-      return;
-    }
-    if (!roomCode || !name) {
-      socket.emit('create-error', 'Room code and name are required.');
-      return;
-    }
-    if (rooms.has(roomCode)) {
-      socket.emit('create-error', 'That room code is already in use. Try another.');
-      return;
-    }
+    if (password !== PASSWORD) return socket.emit('create-error', 'Incorrect password.');
+    if (!roomCode || !name) return socket.emit('create-error', 'Room code and name are required.');
+    if (rooms.has(roomCode)) return socket.emit('create-error', 'That room code is already in use. Try another.');
+
     const room = {
       code: roomCode,
       players: [],
@@ -277,8 +287,9 @@ io.on('connection', (socket) => {
       dealerIndex: 0,
       currentTurnPlayerId: null,
       goOutPlayerId: null,
-      turnOrder: []
+      turnOrder: [],
     };
+
     const player = {
       id: socket.id,
       name,
@@ -289,8 +300,9 @@ io.on('connection', (socket) => {
       goneOut: false,
       laidMelds: [],
       laidMeldIds: [],
-      lastTurnComplete: false
+      lastTurnComplete: false,
     };
+
     room.players.push(player);
     rooms.set(roomCode, room);
     socket.join(roomCode);
@@ -299,23 +311,13 @@ io.on('connection', (socket) => {
   });
 
   socket.on('join', ({ roomCode, name, password }) => {
-    if (password !== PASSWORD) {
-      socket.emit('join-error', 'Incorrect password.');
-      return;
-    }
-    if (!roomCode || !name) {
-      socket.emit('join-error', 'Room code and name are required.');
-      return;
-    }
+    if (password !== PASSWORD) return socket.emit('join-error', 'Incorrect password.');
+    if (!roomCode || !name) return socket.emit('join-error', 'Room code and name are required.');
+
     const room = rooms.get(roomCode);
-    if (!room) {
-      socket.emit('join-error', 'Room not found. Ask the host to create it first.');
-      return;
-    }
-    if (room.players.length >= MAX_PLAYERS) {
-      socket.emit('join-error', 'Room is full (7 players max).');
-      return;
-    }
+    if (!room) return socket.emit('join-error', 'Room not found. Ask the host to create it first.');
+    if (room.players.length >= MAX_PLAYERS) return socket.emit('join-error', 'Room is full (7 players max).');
+
     const player = {
       id: socket.id,
       name,
@@ -326,9 +328,13 @@ io.on('connection', (socket) => {
       goneOut: false,
       laidMelds: [],
       laidMeldIds: [],
-      lastTurnComplete: false
+      lastTurnComplete: false,
     };
+
     room.players.push(player);
+    // keep turnOrder aligned (used once round starts)
+    room.turnOrder = room.players.map((p) => p.id);
+
     socket.join(roomCode);
     socket.emit('join-success', { roomCode });
     broadcastRoom(room);
@@ -337,24 +343,32 @@ io.on('connection', (socket) => {
   socket.on('toggle-ready', ({ roomCode }) => {
     const room = rooms.get(roomCode);
     if (!room) return;
+
     const player = room.players.find((p) => p.id === socket.id);
     if (!player) return;
     if (room.status !== 'lobby') return;
+
     player.ready = !player.ready;
-    const allReady = room.players.length >= MIN_PLAYERS && room.players.every((p) => p.ready);
+
+    const allReady =
+      room.players.length >= MIN_PLAYERS && room.players.every((p) => p.ready);
+
     broadcastRoom(room);
-    if (allReady) {
-      startRound(room);
-    }
+
+    if (allReady) startRound(room);
   });
 
   socket.on('draw-card', ({ roomCode, source }) => {
     const room = rooms.get(roomCode);
     if (!room || room.status !== 'playing') return;
+
     const player = room.players.find((p) => p.id === socket.id);
     if (!player || room.currentTurnPlayerId !== player.id) return;
+
     if (player.hasDrawn) return;
+
     reshuffleIfNeeded(room);
+
     if (source === 'discard') {
       const top = room.discardPile.pop();
       if (!top) return;
@@ -364,6 +378,7 @@ io.on('connection', (socket) => {
       if (!card) return;
       player.hand.push(card);
     }
+
     player.hasDrawn = true;
     broadcastRoom(room);
   });
@@ -371,136 +386,186 @@ io.on('connection', (socket) => {
   socket.on('discard-card', ({ roomCode, cardId }) => {
     const room = rooms.get(roomCode);
     if (!room || room.status !== 'playing') return;
+
     const player = room.players.find((p) => p.id === socket.id);
     if (!player || room.currentTurnPlayerId !== player.id) return;
+
     if (!player.hasDrawn) return;
+
     const index = player.hand.findIndex((c) => c.id === cardId);
     if (index === -1) return;
+
     const [card] = player.hand.splice(index, 1);
     room.discardPile.push(card);
+
+    // end player's draw state
     player.hasDrawn = false;
-    
 
+    // If we're in the final-turn phase (someone already went out) and this is NOT the go-out player,
+    // then this player just completed their final turn.
+    if (room.goOutPlayerId && player.id !== room.goOutPlayerId) {
+      player.lastTurnComplete = true;
+    }
 
-// Mark final-turn completion if needed
-if (room.goOutPlayerId && player.id !== room.goOutPlayerId) {
-  player.lastTurnComplete = true;
-}
+    // Advance turn (skip go-out player if applicable)
+    if (room.goOutPlayerId) {
+      advanceTurnSkippingGoOut(room);
+    } else {
+      moveTurn(room);
+    }
 
-// 🔁 ADVANCE TURN
-moveTurn(room);
+    // Reset draw state for new current player
+    const nextPlayer = room.players.find((p) => p.id === room.currentTurnPlayerId);
+    if (nextPlayer) nextPlayer.hasDrawn = false;
 
-// 🔑 Reset draw state for the new player
-const nextPlayer = room.players.find(
-  p => p.id === room.currentTurnPlayerId
-);
-if (nextPlayer) {
-  nextPlayer.hasDrawn = false;
-}
+    // If someone went out, check if all other players completed their final turn
+    if (room.goOutPlayerId) {
+      const remaining = room.players.filter(
+        (p) => p.id !== room.goOutPlayerId && !p.lastTurnComplete
+      );
+      if (remaining.length === 0) {
+        endRound(room);
+        return;
+      }
+    }
 
-// 🔚 End round if needed
-if (room.goOutPlayerId) {
-  const remaining = room.players.filter(
-    p => p.id !== room.goOutPlayerId && !p.lastTurnComplete
-  );
+    broadcastRoom(room);
+  });
 
-  if (remaining.length === 0) {
-    endRound(room);
-    return;
-  }
-}
+  socket.on('submit-melds', ({ roomCode, melds, discardCardId, markGoOut }) => {
+    const room = rooms.get(roomCode);
+    if (!room) return;
 
-broadcastRoom(room);
-});
+    const player = room.players.find((p) => p.id === socket.id);
+    if (!player) return;
 
-socket.on('submit-melds', ({ roomCode, melds, discardCardId, markGoOut }) => {
-  const room = rooms.get(roomCode);
-  if (!room) return;
+    if (room.status !== 'playing') return;
 
-  const player = room.players.find(p => p.id === socket.id);
-  if (!player) return;
-
-  if (room.status !== 'playing') return;
-
-  // Must be your turn to go out
-  if (markGoOut && room.currentTurnPlayerId !== player.id) {
-    socket.emit('meld-error', 'You can only go out on your turn.');
-    return;
-  }
-
-  // Must have drawn first
-  if (markGoOut && !player.hasDrawn) {
-    socket.emit('meld-error', 'Draw first, then go out.');
-    return;
-  }
-
-  const cardsPerPlayer = room.round + 2;
-  const wildRank = getWildRank(cardsPerPlayer);
-
-  const validation = validateMelds(player.hand, melds, wildRank);
-  if (!validation.ok) {
-    socket.emit('meld-error', validation.message);
-    return;
-  }
-
-  player.laidMelds = validation.usedCards;
-  player.laidMeldIds = validation.usedIds;
-
-  // ===== GO OUT LOGIC =====
-  if (markGoOut) {
-    // Must have exactly one leftover card
-    if (player.hand.length - player.laidMeldIds.length !== 1) {
-      socket.emit('meld-error', 'You must leave one card to discard.');
+    // Must be your turn to go out
+    if (markGoOut && room.currentTurnPlayerId !== player.id) {
+      socket.emit('meld-error', 'You can only go out on your turn.');
       return;
     }
 
-    // Discard the last card SERVER-SIDE
-    const discardIndex = player.hand.findIndex(c => c.id === discardCardId);
-    if (discardIndex === -1) {
-      socket.emit('meld-error', 'Discard card not found.');
+    // Must have drawn first
+    if (markGoOut && !player.hasDrawn) {
+      socket.emit('meld-error', 'Draw first, then go out.');
       return;
     }
 
-    const [discarded] = player.hand.splice(discardIndex, 1);
-    room.discardPile.push(discarded);
+    const cardsPerPlayer = room.round + 2;
+    const wildRank = getWildRank(cardsPerPlayer);
 
+    const validation = validateMelds(player.hand, melds, wildRank);
+    if (!validation.ok) {
+      socket.emit('meld-error', validation.message);
+      return;
+    }
 
+    player.laidMelds = validation.usedCards;
+    player.laidMeldIds = validation.usedIds;
 
-  // Non-go-out meld submission
-  broadcastRoom(room);
-});
+    // ===== GO OUT LOGIC =====
+    if (markGoOut) {
+      // Must have exactly one leftover card (not in melds)
+      if (player.hand.length - player.laidMeldIds.length !== 1) {
+        socket.emit('meld-error', 'You must leave one card to discard.');
+        return;
+      }
+
+      // Discard the last card SERVER-SIDE (so player does NOT manually discard)
+      const discardIndex = player.hand.findIndex((c) => c.id === discardCardId);
+      if (discardIndex === -1) {
+        socket.emit('meld-error', 'Discard card not found.');
+        return;
+      }
+
+      const [discarded] = player.hand.splice(discardIndex, 1);
+      room.discardPile.push(discarded);
+
+      // Mark go-out state
+      room.goOutPlayerId = player.id;
+      player.goneOut = true;
+      player.lastTurnComplete = true;
+      player.hasDrawn = false;
+
+      // Reset other players for their final turn
+      room.players.forEach((p) => {
+        if (p.id !== player.id) {
+          p.lastTurnComplete = false;
+          p.hasDrawn = false;
+        }
+      });
+
+      // Advance turn immediately to the next player (skip the go-out player)
+      advanceTurnSkippingGoOut(room);
+
+      // Ensure the new current player can draw
+      const nextPlayer = room.players.find((p) => p.id === room.currentTurnPlayerId);
+      if (nextPlayer) nextPlayer.hasDrawn = false;
+
+      broadcastRoom(room);
+      return;
+    }
+
+    // Non-go-out meld submission (no turn change)
+    broadcastRoom(room);
+  });
+
+  socket.on('request-state', ({ roomCode }) => {
+    const room = rooms.get(roomCode);
+    if (!room) return;
+    broadcastRoom(room);
+  });
 
   socket.on('reset-round', ({ roomCode }) => {
     const room = rooms.get(roomCode);
     if (!room) return;
     if (room.status === 'finished') return;
+
     room.status = 'lobby';
+    room.goOutPlayerId = null;
+    room.currentTurnPlayerId = null;
+    room.discardPile = [];
+    room.drawPile = [];
+    room.deck = [];
+
     room.players.forEach((p) => {
       p.ready = false;
       p.hand = [];
       p.hasDrawn = false;
       p.laidMelds = [];
+      p.laidMeldIds = [];
       p.goneOut = false;
       p.lastTurnComplete = false;
     });
+
     broadcastRoom(room);
   });
 
   socket.on('disconnect', () => {
     rooms.forEach((room, code) => {
       const idx = room.players.findIndex((p) => p.id === socket.id);
-      if (idx !== -1) {
-        room.players.splice(idx, 1);
-        if (room.players.length === 0) {
-          rooms.delete(code);
-        } else {
-          room.turnOrder = room.turnOrder.filter((id) => id !== socket.id);
-          if (room.turnOrder.length && room.currentTurnPlayerId === socket.id) {
-           
-          }
-          broadcastRoom(room);
-        }
+      if (idx === -1) return;
+
+      const wasTurn = room.currentTurnPlayerId === socket.id;
+
+      room.players.splice(idx, 1);
+      room.turnOrder = room.players.map((p) => p.id);
+
+      if (room.players.length === 0) {
+        rooms.delete(code);
+        return;
       }
+
+      if (wasTurn && room.status === 'playing') {
+        // move turn to next available player
+        room.currentTurnPlayerId = room.turnOrder[0];
+        const nextPlayer = room.players.find((p) => p.id === room.currentTurnPlayerId);
+        if (nextPlayer) nextPlayer.hasDrawn = false;
+      }
+
+      broadcastRoom(room);
     });
   });
 });
