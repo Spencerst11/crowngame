@@ -390,11 +390,16 @@ do {
   room.players[nextIndex].lastTurnComplete
 );
 
-room.currentTurnPlayerId = room.players[nextIndex].id;
-room.players[nextIndex].hasDrawn = false;
+
   if (room.goOutPlayerId && player.id !== room.goOutPlayerId) {
   player.lastTurnComplete = true;
+}
 
+// ALWAYS advance turn after a discard
+moveTurn(room);
+
+// AFTER moving the turn, check if round should end
+if (room.goOutPlayerId) {
   const remaining = room.players.filter(
     (p) => p.id !== room.goOutPlayerId && !p.lastTurnComplete
   );
@@ -404,9 +409,8 @@ room.players[nextIndex].hasDrawn = false;
     return;
   }
 }
-    moveTurn(room);
-    broadcastRoom(room);
-  });
+
+broadcastRoom(room);
 
   socket.on('submit-melds', ({ roomCode, melds, markGoOut }) => {
     const room = rooms.get(roomCode);
