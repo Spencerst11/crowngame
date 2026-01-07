@@ -182,11 +182,27 @@ goOutBtn.addEventListener('click', () => {
   meldError.textContent = '';
   if (!state.roomCode) return;
 
+  // All grouped card IDs
+  const groupedIds = new Set(state.groups.flatMap(g => g.cardIds));
+
+  // Cards not in groups (must be exactly 1)
+  const remainingCards = state.hand.filter(
+    card => !groupedIds.has(card.id)
+  );
+
+  if (remainingCards.length !== 1) {
+    meldError.textContent =
+      'You must have exactly one card left to discard when going out.';
+    return;
+  }
+
+  const discardCardId = remainingCards[0].id;
   const melds = state.groups.map(g => g.cardIds);
 
   socket.emit('submit-melds', {
     roomCode: state.roomCode,
     melds,
+    discardCardId,
     markGoOut: true
   });
 });
