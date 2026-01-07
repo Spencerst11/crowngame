@@ -437,11 +437,48 @@ broadcastRoom(room);
     }
     player.laidMelds = validation.usedCards;
     player.laidMeldIds = validation.usedIds;
-    if (markGoOut) {
-      if (player.hand.length - player.laidMelds.length !== 1) {
-        socket.emit('meld-error', 'You must leave one card to discard when going out.');
-        return;
-      }
+   if (markGoOut) {
+  // Identify remaining card (exactly one)
+  const remainingCard = player.hand.find(
+    c => !player.laidMeldIds.includes(c.id)
+  );
+
+  if (!remainingCard) {
+    socket.emit('meld-error', 'No card to discard.');
+    return;
+  }
+
+  // 🔥 SERVER-AUTHORITATIVE DISCARD
+  player.hand = player.hand.filter(c => c.id !== remainingCard.id);
+  room.discardPile.push(remainingCard);
+
+  // Mark go-out state
+  room.goOutPlayerId = player.id;
+  player.goneOut = true;
+  player.hasDrawn = false;
+  player.lastTurnComplete = true;
+
+  // Prepare remaining players for final turns
+  room.players.forEach(p => {
+    if (p.id !== player.id) {
+      p.lastTurnComplete = false;
+    }
+  });
+
+  // Advance turn immediately
+  moveTurn(room);
+
+  // Reset draw state for next player
+  const nextPlayer = room.players.find(
+    p => p.id === room.currentTurnPlayerId
+  );
+  if (nextPlayer) {
+    nextPlayer.hasDrawn = false;
+  }
+
+  broadcastRoom(room);
+  return;
+}
       room.goOutPlayerId = player.id;
       player.goneOut = true;
       room.players.forEach((p) => {
