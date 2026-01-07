@@ -379,14 +379,31 @@ io.on('connection', (socket) => {
     const [card] = player.hand.splice(index, 1);
     room.discardPile.push(card);
     player.hasDrawn = false;
-    if (room.goOutPlayerId && player.id !== room.goOutPlayerId) {
-      player.lastTurnComplete = true;
-      const remaining = room.players.filter((p) => p.id !== room.goOutPlayerId && !p.lastTurnComplete);
-      if (remaining.length === 0) {
-        endRound(room);
-        return;
-      }
-    }
+    // Advance turn to next eligible player
+const currentIndex = room.players.findIndex(p => p.id === player.id);
+
+let nextIndex = currentIndex;
+do {
+  nextIndex = (nextIndex + 1) % room.players.length;
+} while (
+  room.players[nextIndex].id === room.goOutPlayerId ||
+  room.players[nextIndex].lastTurnComplete
+);
+
+room.currentTurnPlayerId = room.players[nextIndex].id;
+room.players[nextIndex].hasDrawn = false;
+  if (room.goOutPlayerId && player.id !== room.goOutPlayerId) {
+  player.lastTurnComplete = true;
+
+  const remaining = room.players.filter(
+    (p) => p.id !== room.goOutPlayerId && !p.lastTurnComplete
+  );
+
+  if (remaining.length === 0) {
+    endRound(room);
+    return;
+  }
+}
     moveTurn(room);
     broadcastRoom(room);
   });
