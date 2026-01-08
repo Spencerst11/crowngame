@@ -19,31 +19,30 @@ body {
   margin: 0;
   font-family: "Inter", system-ui, -apple-system, sans-serif;
 
-  background-color: #1f1f1f;
+  background-color: #1c1f24;
+
   background-image:
-    repeating-linear-gradient(
-      45deg,
-      rgba(79, 143, 139, 0.18) 0px,
-      rgba(79, 143, 139, 0.18) 12px,
-      transparent 12px,
-      transparent 24px
+    radial-gradient(
+      circle at 20% 25%,
+      rgba(79, 143, 139, 0.18),
+      transparent 55%
     ),
-    repeating-linear-gradient(
-      -45deg,
-      rgba(196, 106, 60, 0.18) 0px,
-      rgba(196, 106, 60, 0.18) 12px,
-      transparent 12px,
-      transparent 24px
+    radial-gradient(
+      circle at 80% 30%,
+      rgba(196, 106, 60, 0.16),
+      transparent 60%
     ),
-    repeating-radial-gradient(
-      circle at center,
-      rgba(139, 58, 58, 0.15) 0px,
-      rgba(139, 58, 58, 0.15) 4px,
-      transparent 4px,
-      transparent 20px
+    radial-gradient(
+      circle at 50% 85%,
+      rgba(139, 58, 58, 0.14),
+      transparent 65%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(255, 255, 255, 0.04),
+      transparent 70%
     );
 
-  background-size: 80px 80px;
   background-attachment: fixed;
 
   color: var(--text);
