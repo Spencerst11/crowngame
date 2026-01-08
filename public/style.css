@@ -21,39 +21,8 @@ body {
   min-height: 100vh;
   color: var(--text);
 
-  background-color: #1a1a1a;
-
-  background-image:
-    /* large organic blobs */
-    radial-gradient(circle at 15% 20%, rgba(56, 168, 156, 0.55) 0 18%, transparent 19%),
-    radial-gradient(circle at 85% 25%, rgba(199, 126, 64, 0.55) 0 20%, transparent 21%),
-    radial-gradient(circle at 30% 80%, rgba(142, 104, 170, 0.5) 0 22%, transparent 23%),
-    radial-gradient(circle at 70% 70%, rgba(176, 74, 74, 0.5) 0 18%, transparent 19%),
-
-    /* thick retro arches */
-    repeating-radial-gradient(
-      circle at 50% 50%,
-      rgba(255, 248, 235, 0.08) 0 24px,
-      rgba(0, 0, 0, 0.6) 24px 30px,
-      transparent 30px 90px
-    ),
-
-    /* subtle paper texture */
-    repeating-linear-gradient(
-      45deg,
-      rgba(255, 255, 255, 0.03) 0 2px,
-      transparent 2px 12px
-    );
-
-  background-size:
-    520px 520px,
-    560px 560px,
-    600px 600px,
-    520px 520px,
-    1000px 1000px,
-    40px 40px;
-
-  background-attachment: fixed;
+  /* Warm wood brown */
+  background-color: #3a2a1e;
 }
 
 /* ================================
