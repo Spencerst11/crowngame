@@ -10,11 +10,14 @@
   --success: #22c55e;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 /* ================================
-   CASINO CARPET BACKGROUND
+   GLOBAL BACKGROUND
    ================================ */
+
 body {
   margin: 0;
   font-family: "Inter", system-ui, -apple-system, sans-serif;
@@ -25,8 +28,37 @@ body {
   background-color: #3a2a1e;
 }
 
-h1, h2, h3 { margin: 0 0 8px; }
-.muted { color: var(--muted); }
+/* ================================
+   LOGIN / ENTRY PANEL (FIXED)
+   ================================ */
+
+.panel {
+  max-width: 520px;
+  margin: 64px auto;
+
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(6px);
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: 28px;
+
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+h1, h2, h3 {
+  margin: 0 0 8px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* ================================
+   FORMS
+   ================================ */
 
 .form-row {
   display: flex;
@@ -42,6 +74,10 @@ h1, h2, h3 { margin: 0 0 8px; }
   color: var(--text);
 }
 
+/* ================================
+   BUTTONS
+   ================================ */
+
 button {
   background: linear-gradient(135deg, #f8b864, #ff8c42);
   border: none;
@@ -54,7 +90,9 @@ button {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
-button:hover { transform: translateY(-1px); }
+button:hover {
+  transform: translateY(-1px);
+}
 
 button:disabled {
   opacity: 0.45;
@@ -69,12 +107,28 @@ button.ghost {
   box-shadow: none;
 }
 
-button.primary { background: #22c55e; }
+button.primary {
+  background: #22c55e;
+}
 
-#error, .error { color: var(--danger); min-height: 20px; }
+#error, .error {
+  color: var(--danger);
+  min-height: 20px;
+}
+
+.entry-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.hidden {
+  display: none;
+}
 
 /* ================================
-   TOP BAR / TAGS
+   TOP BAR
    ================================ */
 
 .top-bar {
@@ -84,36 +138,23 @@ button.primary { background: #22c55e; }
   padding: 16px 20px;
   background: rgba(15, 23, 42, 0.85);
   border-bottom: 1px solid #1e293b;
-  backdrop-filter: blur(6px);
-}
-
-.tag {
-  display: inline-block;
-  margin-right: 8px;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 999px;
-  border: 1px solid #273554;
 }
 
 /* ================================
-   TABLE ZONE
+   TABLE
    ================================ */
 
 .table-zone {
   position: relative;
   height: 480px;
-  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.08), transparent 55%);
   overflow: hidden;
 }
 
 .table-circle {
   position: absolute;
   inset: 24px 24px 100px 24px;
-  background:
-    radial-gradient(circle at 50% 25%, rgba(255, 255, 255, 0.18), transparent 55%),
-    linear-gradient(145deg, #0b3b1e, #072b15);
 
+  background: linear-gradient(145deg, #0b3b1e, #072b15);
   border-radius: 48px;
   border: 10px solid var(--table-edge);
 
@@ -126,33 +167,102 @@ button.primary { background: #22c55e; }
 }
 
 /* ================================
-   CARDS, HANDS, GROUPS
+   CARDS
    ================================ */
-/* (unchanged — preserved exactly as you provided) */
 
-/* ... EVERYTHING BELOW REMAINS IDENTICAL ... */
+.card {
+  width: 64px;
+  height: 94px;
+  border-radius: 10px;
+  background: #fff;
+  color: #0f172a;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  padding: 8px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+  position: relative;
+  cursor: pointer;
+}
 
-/* Selected card glow */
+.card .rank {
+  font-weight: 900;
+  font-size: 16px;
+}
+
+.card .center-suit {
+  font-size: 28px;
+  text-shadow:
+    -1px -1px 0 #000,
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000;
+}
+
 .card.selected {
   transform: translateY(-6px) scale(1.02);
   box-shadow: 0 16px 32px rgba(255, 209, 102, 0.45);
-  border-color: #f59e0b;
+  border: 2px solid #f59e0b;
 }
 
-/* Discard animation */
-@keyframes discard-fly {
-  0% {
-    transform: translate(0, 0) rotate(0deg) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(220px, -140px) rotate(25deg) scale(0.85);
-    opacity: 0;
-  }
+/* ================================
+   HAND PANEL
+   ================================ */
+
+.hand-panel {
+  background: linear-gradient(145deg, #0b3b1e, #072b15);
+
+  padding: 10px 12px;
+  border-radius: 16px;
+
+  box-shadow:
+    inset 0 10px 24px rgba(0, 0, 0, 0.45),
+    0 -8px 24px rgba(0, 0, 0, 0.35);
+
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  max-width: 820px;
+  max-height: 260px;
+  overflow: hidden;
 }
 
-.card.discarding {
-  animation: discard-fly 0.3s ease-in forwards;
-  pointer-events: none;
-  z-index: 999;
+/* ================================
+   BANNER
+   ================================ */
+
+.game-banner {
+  margin: 14px auto;
+  padding: 14px 24px;
+  max-width: 640px;
+  text-align: center;
+
+  background: hotpink;
+  color: white;
+
+  font-size: 22px;
+  font-weight: 900;
+
+  border: 3px solid black;
+  border-radius: 999px;
+}
+
+.game-banner.hidden {
+  display: none;
+}
+
+/* ================================
+   RESPONSIVE
+   ================================ */
+
+@media (max-width: 960px) {
+  .table-zone {
+    height: 400px;
+  }
+
+  .table-circle {
+    inset: 16px;
+  }
 }
