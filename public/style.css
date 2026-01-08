@@ -18,52 +18,40 @@
 body {
   margin: 0;
   font-family: "Inter", system-ui, -apple-system, sans-serif;
-  color: var(--text);
   min-height: 100vh;
+  color: var(--text);
 
-  background-color: #14181f;
+  background-color: #1a1a1a;
 
   background-image:
-    /* large curved arcs */
-    radial-gradient(
-      circle at 20% 30%,
-      rgba(64, 180, 170, 0.35) 0%,
-      rgba(64, 180, 170, 0.35) 12%,
-      transparent 13%
-    ),
-    radial-gradient(
-      circle at 80% 20%,
-      rgba(235, 140, 60, 0.32) 0%,
-      rgba(235, 140, 60, 0.32) 14%,
-      transparent 15%
-    ),
-    radial-gradient(
-      circle at 60% 75%,
-      rgba(210, 70, 70, 0.3) 0%,
-      rgba(210, 70, 70, 0.3) 10%,
-      transparent 11%
+    /* large organic blobs */
+    radial-gradient(circle at 15% 20%, rgba(56, 168, 156, 0.55) 0 18%, transparent 19%),
+    radial-gradient(circle at 85% 25%, rgba(199, 126, 64, 0.55) 0 20%, transparent 21%),
+    radial-gradient(circle at 30% 80%, rgba(142, 104, 170, 0.5) 0 22%, transparent 23%),
+    radial-gradient(circle at 70% 70%, rgba(176, 74, 74, 0.5) 0 18%, transparent 19%),
+
+    /* thick retro arches */
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      rgba(255, 248, 235, 0.08) 0 24px,
+      rgba(0, 0, 0, 0.6) 24px 30px,
+      transparent 30px 90px
     ),
 
-    /* diagonal sharp lines */
-    repeating-linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.06) 0 2px,
-      transparent 2px 26px
-    ),
-
-    /* black structure lines */
+    /* subtle paper texture */
     repeating-linear-gradient(
       45deg,
-      rgba(0, 0, 0, 0.45) 0 1px,
-      transparent 1px 34px
+      rgba(255, 255, 255, 0.03) 0 2px,
+      transparent 2px 12px
     );
 
   background-size:
-    420px 420px,
     520px 520px,
-    460px 460px,
-    60px 60px,
-    80px 80px;
+    560px 560px,
+    600px 600px,
+    520px 520px,
+    1000px 1000px,
+    40px 40px;
 
   background-attachment: fixed;
 }
