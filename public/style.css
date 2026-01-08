@@ -156,6 +156,62 @@ button.primary {
 }
 
 /* ================================
+   SCORE TAB
+   ================================ */
+
+.score-tab {
+  position: fixed;
+  top: 88px;
+  right: 20px;
+  width: min(320px, 92vw);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.score-toggle {
+  align-self: flex-end;
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--text);
+  border: 1px solid #273554;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.score-panel {
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid #273554;
+  border-radius: 16px;
+  padding: 12px 16px;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.35);
+  max-height: 60vh;
+  overflow-y: auto;
+  transition: opacity 0.2s ease, transform 0.2s ease, max-height 0.2s ease;
+}
+
+.score-panel-header {
+  margin-bottom: 8px;
+}
+
+.score-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.score-row:last-child {
+  border-bottom: none;
+}
+
+.score-tab.collapsed .score-panel {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px);
+}
+
+/* ================================
    TABLE ZONE
    ================================ */
 
@@ -264,6 +320,11 @@ button.primary {
   .table-zone {
     height: min(420px, 50vh);
   }
+
+  .score-tab {
+    top: 140px;
+    right: 12px;
+  }
 }
 
 @media (max-width: 600px) {
@@ -280,12 +341,17 @@ button.primary {
   .table-zone {
     height: min(360px, 45vh);
   }
+
+  .score-tab {
+    top: 132px;
+    right: 8px;
+    width: min(280px, 92vw);
+  }
 }
 
 /* ================================
    CARDS, HANDS, GROUPS
    ================================ */
-/* (unchanged — preserved exactly as you provided) */
 
 /* Selected card glow */
 .card.selected {
