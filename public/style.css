@@ -236,10 +236,6 @@ button.primary { background: #22c55e; }
   padding: 8px;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
   position: relative;
-  
-  z-index: 3;
-  pointer-events: auto;
-  cursor: pointer;
 }
 
 .card .rank { font-weight: 800; }
@@ -334,9 +330,6 @@ button.primary { background: #22c55e; }
   padding: 4px 2px;
 
   justify-content: center;
-
-    position: relative;
-  z-index: 2;
 }
 .hand-actions {
   display: flex;
@@ -349,15 +342,7 @@ button.primary { background: #22c55e; }
   background: rgba(0, 0, 0, 0.25);
   border-radius: 12px;
 }
-/* ================================
-   Selected card feedback (GLOBAL)
-   ================================ */
 
-.card.selected {
-  transform: translateY(-6px) scale(1.02);
-  box-shadow: 0 16px 32px rgba(255, 209, 102, 0.45);
-  border-color: #f59e0b;
-}
 /* ================================
    Groups (new grouping system)
    ================================ */
@@ -371,9 +356,6 @@ button.primary { background: #22c55e; }
 
   max-height: 120px;
   overflow-y: auto;
-
-   position: relative;
-  z-index: 1;
 }
 
 .groups-list {
@@ -391,10 +373,7 @@ button.primary { background: #22c55e; }
 
   min-width: max-content;
 }
-.group.selected {
-  outline: 2px solid #f59e0b;
-  box-shadow: 0 0 16px rgba(245, 158, 11, 0.6);
-}
+
 .group-title {
   font-size: 12px;
   color: var(--muted);
@@ -492,24 +471,4 @@ button.primary { background: #22c55e; }
 
 .game-banner.hidden {
   display: none;
-}
-/* ================================
-   Discard animation (fast)
-   ================================ */
-
-@keyframes discard-fly {
-  0% {
-    transform: translate(0, 0) rotate(0deg) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(220px, -140px) rotate(25deg) scale(0.85);
-    opacity: 0;
-  }
-}
-
-.card.discarding {
-  animation: discard-fly 0.3s ease-in forwards;
-  pointer-events: none;
-  z-index: 999;
 }
