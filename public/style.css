@@ -10,7 +10,9 @@
   --success: #22c55e;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 /* ================================
    CASINO CARPET BACKGROUND
@@ -18,6 +20,7 @@
 body {
   margin: 0;
   font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-size: clamp(14px, 1.7vw, 16px);
 
   background-color: #1f1f1f;
   background-image:
@@ -55,7 +58,7 @@ body {
    ================================ */
 
 .panel {
-  max-width: 520px;
+  width: min(520px, calc(100vw - 32px));
   margin: 48px auto;
   background: var(--surface);
   border: 1px solid #1f2a52;
@@ -64,8 +67,15 @@ body {
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
 }
 
-h1, h2, h3 { margin: 0 0 8px; }
-.muted { color: var(--muted); }
+h1,
+h2,
+h3 {
+  margin: 0 0 8px;
+}
+
+.muted {
+  color: var(--muted);
+}
 
 .form-row {
   display: flex;
@@ -81,19 +91,9 @@ h1, h2, h3 { margin: 0 0 8px; }
   color: var(--text);
 }
 
-button {
-  background: linear-gradient(135deg, #f8b864, #ff8c42);
-  border: none;
-  color: #0b1224;
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.1s ease, box-shadow 0.2s ease;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+button:hover {
+  transform: translateY(-1px);
 }
-
-button:hover { transform: translateY(-1px); }
 
 button:disabled {
   opacity: 0.45;
@@ -108,9 +108,15 @@ button.ghost {
   box-shadow: none;
 }
 
-button.primary { background: #22c55e; }
+button.primary {
+  background: #22c55e;
+}
 
-#error, .error { color: var(--danger); min-height: 20px; }
+#error,
+.error {
+  color: var(--danger);
+  min-height: 20px;
+}
 
 /* ================================
    TOP BAR / TAGS
@@ -120,10 +126,24 @@ button.primary { background: #22c55e; }
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   padding: 16px 20px;
   background: rgba(15, 23, 42, 0.85);
   border-bottom: 1px solid #1e293b;
   backdrop-filter: blur(6px);
+}
+
+.top-bar > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.top-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 .tag {
@@ -141,8 +161,12 @@ button.primary { background: #22c55e; }
 
 .table-zone {
   position: relative;
-  height: 480px;
-  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.08), transparent 55%);
+  height: min(480px, 55vh);
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 255, 255, 0.08),
+    transparent 55%
+  );
   overflow: hidden;
 }
 
@@ -164,12 +188,104 @@ button.primary { background: #22c55e; }
   place-items: center;
 }
 
+.players {
+  position: absolute;
+  inset: 0;
+}
+
+.seat {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  max-width: min(200px, 40vw);
+}
+
+.badge {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid #273554;
+  text-wrap: balance;
+}
+
+.badge .name,
+.badge .count {
+  text-align: center;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.hand-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 20px 28px;
+}
+
+.hand-actions,
+.groups-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hand,
+.groups-list,
+.meld-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hand {
+  min-height: 120px;
+}
+
+#game {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+@media (max-width: 900px) {
+  .top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .top-actions {
+    justify-content: flex-start;
+  }
+
+  .table-zone {
+    height: min(420px, 50vh);
+  }
+}
+
+@media (max-width: 600px) {
+  .panel {
+    margin: 28px auto;
+    padding: 20px;
+  }
+
+  .table-circle {
+    inset: 16px 12px 80px 12px;
+    border-radius: 32px;
+  }
+
+  .table-zone {
+    height: min(360px, 45vh);
+  }
+}
+
 /* ================================
    CARDS, HANDS, GROUPS
    ================================ */
 /* (unchanged — preserved exactly as you provided) */
-
-/* ... EVERYTHING BELOW REMAINS IDENTICAL ... */
 
 /* Selected card glow */
 .card.selected {
@@ -188,10 +304,4 @@ button.primary { background: #22c55e; }
     transform: translate(220px, -140px) rotate(25deg) scale(0.85);
     opacity: 0;
   }
-}
-
-.card.discarding {
-  animation: discard-fly 0.3s ease-in forwards;
-  pointer-events: none;
-  z-index: 999;
 }
